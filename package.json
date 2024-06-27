@@ -4,6 +4,7 @@
   "description": "Client library and CLI for the Synapse API",
   "main": "index.js",
   "scripts": {
+    "generate": "./scripts/generate.sh",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -14,5 +15,10 @@
   "bugs": {
     "url": "https://github.com/sciencecorp/synapse-client-typescript/issues"
   },
-  "homepage": "https://github.com/sciencecorp/synapse-client-typescript#readme"
+  "homepage": "https://github.com/sciencecorp/synapse-client-typescript#readme",
+  "devDependencies": {
+    "grpc-tools": "^1.12.4",
+    "protobufjs-cli": "^1.1.2",
+    "typescript": "^5.5.2"
+  }
 }
