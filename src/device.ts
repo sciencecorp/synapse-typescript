@@ -1,21 +1,18 @@
 import { Channel, credentials } from "@grpc/grpc-js";
 
-import gpe from "google-protobuf/google/protobuf/empty_pb.js";
-
 import { Status } from "./api/synapse/Status";
 import { StatusCode } from "./api/synapse/StatusCode";
 import Config from "./config";
+import { DeviceInfo } from "./api/synapse/DeviceInfo";
 import { create } from "./utils/client";
-import { SynapseDeviceClient } from "./api/synapse/SynapseDevice";
-import { DeviceConfiguration } from "./api/synapse/DeviceConfiguration";
 
 class Device {
-  rpc: SynapseDeviceClient;
+  rpc: any;
   channel: Channel;
   sockets: any = null;
 
   constructor(public uri: string) {
-    this.rpc = create(this.uri, credentials.createInsecure());
+    this.rpc = create(uri, credentials.createInsecure());
   }
 
   async configure(config: Config): Promise<boolean> {
@@ -34,14 +31,14 @@ class Device {
     });
   }
 
-  async info(): Promise<DeviceConfiguration> {
+  async info(): Promise<DeviceInfo> {
     // TODO(antoniae)
     return new Promise((resolve, reject) => {
-      this.rpc.info(new gpe.Empty(), (err, res) => {
+      this.rpc.info({}, (err, res) => {
         if (err) {
           reject(err);
         } else {
-          resolve(res as DeviceConfiguration);
+          resolve(res!);
         }
       });
     });
@@ -49,7 +46,7 @@ class Device {
 
   async start(): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      this.rpc.start(new gpe.Empty(), (err, res) => {
+      this.rpc.start({}, (err, res) => {
         if (err) {
           reject(err);
         } else {
@@ -65,7 +62,7 @@ class Device {
 
   async stop(): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      this.rpc.stop(new gpe.Empty(), (err, res) => {
+      this.rpc.stop({}, (err, res) => {
         if (err) {
           reject(err);
         } else {

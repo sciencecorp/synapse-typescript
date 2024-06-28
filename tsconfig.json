@@ -13,8 +13,8 @@
     "resolveJsonModule": true,
     "jsx": "react",
     "paths": {
-      "*": ["node_modules/*", "src/*"]
+      "*": ["node_modules/*", "src/*", "tests/*"]
     }
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "tests/**/*"]
 }

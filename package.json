@@ -9,7 +9,7 @@
     "discover": "node ./dist/utils/discover.js",
     "generate": "./scripts/generate.sh",
     "lint": "tsc --noEmit && eslint --ext .ts,.tsx .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "./dist/tests/main.js"
   },
   "repository": {
     "type": "git",
@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.10.10",
+    "@grpc/proto-loader": "^0.7.13",
     "google-protobuf": "^3.21.2",
     "zeromq": "^6.0.0-beta.20"
   }
