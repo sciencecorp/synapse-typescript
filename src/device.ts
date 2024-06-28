@@ -11,7 +11,7 @@ import Config from "./config";
 
 class Device {
   rpc: any;
-  channel: Channel = null;
+  channel: Channel;
   sockets: any = null;
 
   constructor(public uri: string) {

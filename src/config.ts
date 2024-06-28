@@ -1,8 +1,11 @@
 import { synapse } from "api/synapse";
+import Node from "./node";
+
+type Connection = [number, number];
 
 class Config {
-  nodes = [];
-  connections = [];
+  connections: Connection[] = [];
+  nodes: Node[] = [];
 
   _genNodeId() {
     return this.nodes.length + 1;
@@ -17,7 +20,7 @@ class Config {
     return true;
   }
 
-  connect(fromNode, toNode) {
+  connect(fromNode: Node, toNode: Node) {
     if (fromNode.id === null || toNode.id === null) {
       return false;
     }
@@ -41,17 +44,15 @@ class Config {
   }
 
   toProto() {
-    const c = new synapse.DeviceConfiguration();
-    for (const node of this.nodes) {
-      c.nodes.push(node.toProto());
-    }
-    for (const connection of this.connections) {
-      const x = new synapse.NodeConnection();
-      x.srcNodeId = connection[0];
-      x.dstNodeId = connection[1];
-      c.connections.push(x);
-    }
-    return c;
+    return synapse.DeviceConfiguration.create({
+      nodes: this.nodes.map((node) => node.toProto()),
+      connections: this.connections.map((connection) => {
+        return synapse.NodeConnection.create({
+          srcNodeId: connection[0],
+          dstNodeId: connection[1],
+        });
+      }),
+    });
   }
 }
 
