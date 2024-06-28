@@ -1,12 +1,21 @@
 import dgram from "dgram";
 
+const kDefaultTimeout = 3000;
+
 interface DiscoverArgs {
   host: string;
   port: number;
   auth_code?: string;
+  timeoutMs?: number;
 }
 
-export const discover = (args: DiscoverArgs) => {
+const kDefaultDiscoverArgs: DiscoverArgs = {
+  host: "224.0.0.245",
+  port: 6470,
+  timeoutMs: kDefaultTimeout,
+};
+
+export const discover = (args = kDefaultDiscoverArgs) => {
   const socket = dgram.createSocket("udp4");
 
   socket.on("message", (msg: Buffer, rinfo: any) => {
@@ -39,5 +48,10 @@ export const discover = (args: DiscoverArgs) => {
   const payload = Buffer.from(`DISCOVER ${args.auth_code || 0}`, "ascii");
 
   console.log("Announcing...");
-  socket.send(payload, 0, payload.length, args.port, args.host);
+  socket.send(payload, 0, payload.length, args.port, args.host, () => {
+    if (!args.timeoutMs) {
+      return;
+    }
+    setTimeout(() => socket.close(), kDefaultTimeout);
+  });
 };

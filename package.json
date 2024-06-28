@@ -4,6 +4,8 @@
   "description": "Client library and CLI for the Synapse API",
   "main": "dist/index.js",
   "scripts": {
+    "build": "tsc",
+    "discover": "node ./dist/utils/discover.js",
     "generate": "./scripts/generate.sh",
     "lint": "tsc --noEmit && eslint --ext .ts,.tsx .",
     "test": "echo \"Error: no test specified\" && exit 1"
