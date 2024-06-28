@@ -1,5 +1,5 @@
-import { synapse } from "api/synapse";
 import Node from "./node";
+import { DeviceConfiguration } from "./api/synapse/DeviceConfiguration";
 
 type Connection = [number, number];
 
@@ -43,16 +43,16 @@ class Config {
     }
   }
 
-  toProto() {
-    return synapse.DeviceConfiguration.create({
+  toProto(): DeviceConfiguration {
+    return {
       nodes: this.nodes.map((node) => node.toProto()),
       connections: this.connections.map((connection) => {
-        return synapse.NodeConnection.create({
+        return {
           srcNodeId: connection[0],
           dstNodeId: connection[1],
-        });
+        };
       }),
-    });
+    };
   }
 }
 

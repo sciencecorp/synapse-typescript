@@ -1,4 +1,5 @@
-import { synapse } from "api/synapse";
+import { NodeConfig } from "../api/synapse/NodeConfig";
+import { NodeType } from "../api/synapse/NodeType";
 import ChannelMask from "../channel_mask";
 import Node from "../node";
 
@@ -10,15 +11,15 @@ const kDefaultElectricalBroadbandConfig = {
 };
 
 class ElectricalBroadband extends Node {
+  type = NodeType.kElectricalBroadband;
   channelMask: ChannelMask;
-  type: synapse.NodeType.kElectricalBroadband;
 
-  constructor(channelMask = new ChannelMask("all")) {
+  constructor(channelMask = new ChannelMask()) {
     super();
     this.channelMask = channelMask;
   }
 
-  toProto(): synapse.NodeConfig {
+  toProto(): NodeConfig {
     return super.toProto({
       electricalBroadband: {
         ...kDefaultElectricalBroadbandConfig,

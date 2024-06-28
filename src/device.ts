@@ -1,80 +1,86 @@
-import {
-  Channel,
-  ServiceClientConstructor,
-  credentials,
-  loadPackageDefinition,
-} from "@grpc/grpc-js";
-import { loadSync } from "@grpc/proto-loader";
-import { synapse } from "api/synapse";
+import { Channel, credentials } from "@grpc/grpc-js";
 
+import gpe from "google-protobuf/google/protobuf/empty_pb.js";
+
+import { Status } from "./api/synapse/Status";
+import { StatusCode } from "./api/synapse/StatusCode";
 import Config from "./config";
+import { create } from "./utils/client";
+import { SynapseDeviceClient } from "./api/synapse/SynapseDevice";
+import { DeviceConfiguration } from "./api/synapse/DeviceConfiguration";
 
 class Device {
-  rpc: any;
+  rpc: SynapseDeviceClient;
   channel: Channel;
   sockets: any = null;
 
   constructor(public uri: string) {
-    const definition = loadSync("src/api/synapse.js", {
-      enums: String,
-      defaults: true,
-      oneofs: true,
+    this.rpc = create(this.uri, credentials.createInsecure());
+  }
+
+  async configure(config: Config): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      this.rpc.configure(config.toProto(), (err, res) => {
+        if (err) {
+          reject(err);
+        } else {
+          if (this._handleStatusResponse(res!)) {
+            resolve(true);
+          } else {
+            reject("Error configuring device");
+          }
+        }
+      });
     });
-    const pkg = loadPackageDefinition(definition);
-    const nspace = pkg.synapse as any;
-    const SynapseDevice = nspace?.SynapseDevice as ServiceClientConstructor;
-
-    this.rpc = new SynapseDevice(this.uri, credentials.createInsecure());
   }
 
-  async configure(config: Config) {
-    try {
-      config.setDevice(this);
-      const res = this.rpc.configure(config.toProto());
-      if (this._handleStatusResponse(res)) {
-        return res;
-      }
-    } catch (e) {
-      console.log("Error: ", e.details);
-    }
-    return false;
+  async info(): Promise<DeviceConfiguration> {
+    // TODO(antoniae)
+    return new Promise((resolve, reject) => {
+      this.rpc.info(new gpe.Empty(), (err, res) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(res as DeviceConfiguration);
+        }
+      });
+    });
   }
 
-  async info() {
-    try {
-      return this.rpc.info();
-    } catch (e) {
-      console.log("Error: ", e.details);
-      return null;
-    }
+  async start(): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      this.rpc.start(new gpe.Empty(), (err, res) => {
+        if (err) {
+          reject(err);
+        } else {
+          if (this._handleStatusResponse(res!)) {
+            resolve(true);
+          } else {
+            reject("Error starting device");
+          }
+        }
+      });
+    });
   }
 
-  async start() {
-    try {
-      const res = this.rpc.start();
-      if (this._handleStatusResponse(res)) {
-        return res;
-      }
-    } catch (e) {
-      console.log("Error: ", e.details);
-    }
-    return false;
+  async stop(): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      this.rpc.stop(new gpe.Empty(), (err, res) => {
+        if (err) {
+          reject(err);
+        } else {
+          if (this._handleStatusResponse(res!)) {
+            resolve(true);
+          } else {
+            reject("Error stopping device");
+          }
+        }
+      });
+    });
   }
 
-  async stop() {
-    try {
-      const res = this.rpc.stop();
-      if (this._handleStatusResponse(res)) {
-        return res;
-      }
-    } catch (e) {
-      console.log("Error: ", e.details);
-    }
-    return false;
-  }
-
-  _handleStatusResponse(status: synapse.Status) {
-    if (status.code !== synapse.StatusCode.kOk) {
+  _handleStatusResponse(status: Status): boolean {
+    if (status.code !== StatusCode.kOk) {
       console.log(`Error ${status.code}: ${status.message}`);
       return false;
     } else {

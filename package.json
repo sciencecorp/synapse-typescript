@@ -5,6 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
+    "clean": "rm -rf dist src/api",
     "discover": "node ./dist/utils/discover.js",
     "generate": "./scripts/generate.sh",
     "lint": "tsc --noEmit && eslint --ext .ts,.tsx .",
@@ -22,11 +23,11 @@
   "devDependencies": {
     "eslint": "^9.5.0",
     "grpc-tools": "^1.12.4",
-    "protobufjs-cli": "^1.1.2",
     "typescript": "^5.5.2"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.10.10",
+    "google-protobuf": "^3.21.2",
     "zeromq": "^6.0.0-beta.20"
   }
 }

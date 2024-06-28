@@ -1,15 +1,16 @@
-import { synapse } from "api/synapse";
+import { NodeConfig } from "../api/synapse/NodeConfig";
+import { NodeType } from "../api/synapse/NodeType";
 import ChannelMask from "../channel_mask";
 import Node from "../node";
 
 import zmq from "zeromq";
 
 class StreamOut extends Node {
+  type = NodeType.kStreamOut;
   channelMask: ChannelMask;
   ctx: zmq.Context;
-  type: synapse.NodeType.kStreamOut;
 
-  constructor(channelMask = new ChannelMask("all")) {
+  constructor(channelMask = new ChannelMask()) {
     super();
     this.ctx = new zmq.Context();
     this.channelMask = channelMask;
@@ -31,7 +32,7 @@ class StreamOut extends Node {
     return await sub.receive();
   }
 
-  toProto(): synapse.NodeConfig {
+  toProto(): NodeConfig {
     return super.toProto({
       streamOut: {
         chMask: Array.from(this.channelMask.iterChannels()),

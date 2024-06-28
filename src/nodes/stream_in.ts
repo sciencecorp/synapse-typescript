@@ -1,5 +1,6 @@
+import { NodeConfig } from "../api/synapse/NodeConfig";
+import { NodeType } from "../api/synapse/NodeType";
 import Node from "../node";
-import { synapse } from "api/synapse";
 
 import zmq from "zeromq";
 
@@ -8,7 +9,7 @@ const kDefaultStreamInConfig = {
 };
 
 class StreamIn extends Node {
-  type: synapse.NodeType.kStreamIn;
+  type = NodeType.kStreamIn;
   pub: zmq.Publisher;
 
   constructor() {
@@ -37,7 +38,7 @@ class StreamIn extends Node {
     return true;
   }
 
-  toProto(): synapse.NodeConfig {
+  toProto(): NodeConfig {
     return super.toProto({
       streamIn: kDefaultStreamInConfig,
     });

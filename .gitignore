@@ -14,5 +14,4 @@ venv.bak/
 
 # Node
 node_modules/
-
 dist/
