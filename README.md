@@ -4,4 +4,4 @@ To build:
 
     git submodule update --init
     npm i
-    npm generate
+    npm run generate
