@@ -34,7 +34,7 @@ class Config {
     }
     node.id = this._genNodeId();
     this.nodes.push(node);
-    return false;
+    return true;
   }
 
   setDevice(device): boolean {
