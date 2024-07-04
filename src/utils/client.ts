@@ -10,8 +10,9 @@ const PROTO_FILE = `api/synapse.proto`;
 
 const loadClient = () => {
   const definition = loadSync(PROTO_FILE, {
-    keepCase: true,
-    enums: String,
+    keepCase: false,
+    arrays: true,
+    enums: Number,
     defaults: true,
     oneofs: true,
     includeDirs: [PROTO_DIR],

@@ -8,8 +8,7 @@
     "clean": "rm -rf dist src/api",
     "discover": "node ./dist/utils/discover.js",
     "generate": "./scripts/generate.sh",
-    "lint": "tsc --noEmit && eslint --ext .ts,.tsx .",
-    "test": "./dist/tests/main.js"
+    "lint": "tsc --noEmit && eslint --ext .ts,.tsx ."
   },
   "repository": {
     "type": "git",
@@ -22,7 +21,6 @@
   "homepage": "https://github.com/sciencecorp/synapse-client-typescript#readme",
   "devDependencies": {
     "eslint": "^9.5.0",
-    "grpc-tools": "^1.12.4",
     "typescript": "^5.5.2"
   },
   "dependencies": {
