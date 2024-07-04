@@ -26,7 +26,6 @@
   "dependencies": {
     "@grpc/grpc-js": "^1.10.10",
     "@grpc/proto-loader": "^0.7.13",
-    "google-protobuf": "^3.21.2",
-    "zeromq": "^6.0.0-beta.20"
+    "google-protobuf": "^3.21.2"
   }
 }

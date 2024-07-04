@@ -3,16 +3,12 @@ import { NodeType } from "../api/synapse/NodeType";
 import ChannelMask from "../channel_mask";
 import Node from "../node";
 
-import zmq from "zeromq";
-
 class StreamOut extends Node {
   type = NodeType.kStreamOut;
   channelMask: ChannelMask;
-  ctx: zmq.Context;
 
   constructor(channelMask = new ChannelMask()) {
     super();
-    this.ctx = new zmq.Context();
     this.channelMask = channelMask;
   }
 
@@ -26,10 +22,7 @@ class StreamOut extends Node {
       return false;
     }
 
-    const sub = new zmq.Subscriber({ context: this.ctx });
-    sub.connect(socket.bind);
-    sub.subscribe("");
-    return await sub.receive();
+    return false;
   }
 
   toProto(): NodeConfig {

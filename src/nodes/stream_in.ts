@@ -2,19 +2,15 @@ import { NodeConfig } from "../api/synapse/NodeConfig";
 import { NodeType } from "../api/synapse/NodeType";
 import Node from "../node";
 
-import zmq from "zeromq";
-
 const kDefaultStreamInConfig = {
   shape: [2048, 1],
 };
 
 class StreamIn extends Node {
   type = NodeType.kStreamIn;
-  pub: zmq.Publisher;
 
   constructor() {
     super();
-    this.pub = new zmq.Publisher();
   }
 
   write(data: string): boolean {
@@ -27,10 +23,8 @@ class StreamIn extends Node {
       return false;
     }
 
-    this.pub.connect(socket.bind);
-
     try {
-      this.pub.send(data);
+      return false;
     } catch (e) {
       console.error(`Error sending data: ${e}`);
     }
