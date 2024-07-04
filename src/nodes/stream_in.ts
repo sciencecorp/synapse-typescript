@@ -22,7 +22,7 @@ class StreamIn extends Node {
       return false;
     }
 
-    const socket = this.device.sockets.find((s) => s.node_id === this.id);
+    const socket = this.device.sockets.find((s) => s.nodeId === this.id);
     if (!socket) {
       return false;
     }
