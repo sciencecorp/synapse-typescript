@@ -11,15 +11,12 @@ import ElectricalBroadband from "./nodes/electrical_broadband";
 import OpticalStimulation from "./nodes/optical_stimulation";
 import StreamIn from "./nodes/stream_in";
 import StreamOut from "./nodes/stream_out";
+import { discover } from "./utils/discover";
 import { getName } from "./utils/enum";
 
 const cli = yargs(hideBin(process.argv))
   .help()
-  .option("uri", {
-    alias: "u",
-    type: "string",
-    demandOption: true,
-  })
+  .command("discover", "Discover synapse devices")
   .command("read", "Read from StreamOut node", {
     "multicast-group": {
       alias: "m",
@@ -30,6 +27,11 @@ const cli = yargs(hideBin(process.argv))
       alias: "o",
       type: "string",
       description: "Output file",
+    },
+    uri: {
+      alias: "u",
+      type: "string",
+      demandOption: true,
     },
   })
   .command("write", "Write to StreamIn node", {
@@ -42,6 +44,11 @@ const cli = yargs(hideBin(process.argv))
       alias: "i",
       type: "string",
       description: "Input file",
+    },
+    uri: {
+      alias: "u",
+      type: "string",
+      demandOption: true,
     },
   });
 
@@ -255,6 +262,11 @@ const write = async (device: Device, argv: any) => {
 
 const main = async () => {
   const argv = cli.parseSync();
+
+  if (argv._.includes("discover")) {
+    return discover();
+  }
+
   const { uri } = argv;
 
   console.log(`Connecting to device @ ${uri}`);
