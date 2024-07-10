@@ -6,10 +6,11 @@
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist src/api",
+    "demo": "node ./dist/demo.js",
     "discover": "node ./dist/utils/discover.js",
     "generate": "./scripts/generate.sh",
     "lint": "tsc --noEmit && eslint --ext .ts,.tsx .",
-    "test": "./dist/tests/main.js"
+    "postinstall": "git submodule update --init && npm run generate"
   },
   "repository": {
     "type": "git",
@@ -22,13 +23,12 @@
   "homepage": "https://github.com/sciencecorp/synapse-client-typescript#readme",
   "devDependencies": {
     "eslint": "^9.5.0",
-    "grpc-tools": "^1.12.4",
     "typescript": "^5.5.2"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.10.10",
     "@grpc/proto-loader": "^0.7.13",
     "google-protobuf": "^3.21.2",
-    "zeromq": "^6.0.0-beta.20"
+    "yargs": "^17.7.2"
   }
 }

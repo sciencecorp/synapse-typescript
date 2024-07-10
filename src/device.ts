@@ -1,15 +1,17 @@
 import { Channel, credentials } from "@grpc/grpc-js";
 
+import { DeviceInfo } from "./api/synapse/DeviceInfo";
+import { NodeSocket } from "./api/synapse/NodeSocket";
 import { Status } from "./api/synapse/Status";
 import { StatusCode } from "./api/synapse/StatusCode";
 import Config from "./config";
-import { DeviceInfo } from "./api/synapse/DeviceInfo";
 import { create } from "./utils/client";
+import { getName } from "./utils/enum";
 
 class Device {
   rpc: any;
   channel: Channel;
-  sockets: any = null;
+  sockets: NodeSocket[] = [];
 
   constructor(public uri: string) {
     this.rpc = create(uri, credentials.createInsecure());
@@ -17,6 +19,8 @@ class Device {
 
   async configure(config: Config): Promise<boolean> {
     return new Promise((resolve, reject) => {
+      config.setDevice(this);
+
       this.rpc.configure(config.toProto(), (err, res) => {
         if (err) {
           reject(err);
@@ -24,7 +28,8 @@ class Device {
           if (this._handleStatusResponse(res!)) {
             resolve(true);
           } else {
-            reject("Error configuring device");
+            const { status } = res;
+            reject(`Error configuring device: (code: ${getName(StatusCode, status.code)}) ${status.message}`);
           }
         }
       });
@@ -32,7 +37,6 @@ class Device {
   }
 
   async info(): Promise<DeviceInfo> {
-    // TODO(antoniae)
     return new Promise((resolve, reject) => {
       this.rpc.info({}, (err, res) => {
         if (err) {
@@ -53,7 +57,8 @@ class Device {
           if (this._handleStatusResponse(res!)) {
             resolve(true);
           } else {
-            reject("Error starting device");
+            const { status } = res;
+            reject(`Error starting device: (code: ${getName(StatusCode, status.code)}) ${status.message}`);
           }
         }
       });
@@ -69,7 +74,8 @@ class Device {
           if (this._handleStatusResponse(res!)) {
             resolve(true);
           } else {
-            reject("Error stopping device");
+            const { status } = res;
+            reject(`Error stopping device: (code: ${getName(StatusCode, status.code)}) ${status.message}`);
           }
         }
       });
@@ -78,10 +84,9 @@ class Device {
 
   _handleStatusResponse(status: Status): boolean {
     if (status.code !== StatusCode.kOk) {
-      console.log(`Error ${status.code}: ${status.message}`);
       return false;
     } else {
-      this.sockets = status.sockets;
+      this.sockets = status.sockets || [];
       return true;
     }
   }

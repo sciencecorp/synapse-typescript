@@ -1,38 +1,54 @@
+import dgram from "dgram";
+
 import { NodeConfig } from "../api/synapse/NodeConfig";
 import { NodeType } from "../api/synapse/NodeType";
 import Node from "../node";
-
-import zmq from "zeromq";
 
 const kDefaultStreamInConfig = {
   shape: [2048, 1],
 };
 
+export interface StreamInArgs {
+  shape?: number[];
+  multicastGroup?: string;
+}
+
 class StreamIn extends Node {
   type = NodeType.kStreamIn;
-  pub: zmq.Publisher;
+  multicastGroup: string;
+  _socket: dgram.Socket;
 
-  constructor() {
+  constructor(args: StreamInArgs) {
     super();
-    this.pub = new zmq.Publisher();
+    this.multicastGroup = args.multicastGroup || null;
   }
 
-  write(data: string): boolean {
+  write(data: string | Buffer): boolean {
     if (this.device === null) {
       return false;
     }
 
-    const socket = this.device.sockets.find((s) => s.node_id === this.id);
+    const socket = this.device.sockets.find((s) => s.nodeId === this.id);
     if (!socket) {
       return false;
     }
 
-    this.pub.connect(socket.bind);
+    const port = socket.bind;
+    const addr = this._getAddr();
+    if (!addr || !port) {
+      return false;
+    }
+
+    if (!this._socket) {
+      this._socket = dgram.createSocket("udp4");
+
+      this._socket.on("error", (err: any) => {});
+    }
 
     try {
-      this.pub.send(data);
+      this._socket.send(data, port, addr);
     } catch (e) {
-      console.error(`Error sending data: ${e}`);
+      return false;
     }
 
     return true;
@@ -40,9 +56,24 @@ class StreamIn extends Node {
 
   toProto(): NodeConfig {
     return super.toProto({
-      streamIn: kDefaultStreamInConfig,
+      streamIn: {
+        ...kDefaultStreamInConfig,
+        multicastGroup: this.multicastGroup,
+      },
     });
   }
+
+  _getAddr = (): string | null => {
+    if (this.device === null) {
+      return null;
+    }
+
+    if (this.multicastGroup) {
+      return this.multicastGroup;
+    }
+
+    return this.device.uri.split(":")[0];
+  };
 }
 
 export default StreamIn;

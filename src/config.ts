@@ -7,11 +7,11 @@ class Config {
   connections: Connection[] = [];
   nodes: Node[] = [];
 
-  _genNodeId() {
+  _genNodeId(): number {
     return this.nodes.length + 1;
   }
 
-  add(nodes) {
+  add(nodes: Node[]) {
     for (const node of nodes) {
       if (!this.addNode(node)) {
         return false;
@@ -20,7 +20,7 @@ class Config {
     return true;
   }
 
-  connect(fromNode: Node, toNode: Node) {
+  connect(fromNode: Node, toNode: Node): boolean {
     if (fromNode.id === null || toNode.id === null) {
       return false;
     }
@@ -28,19 +28,20 @@ class Config {
     return true;
   }
 
-  addNode(node) {
-    if (node.id !== null) {
-      return false;
+  addNode(node: Node): boolean {
+    if (!!node.id) {
+      return true;
     }
     node.id = this._genNodeId();
     this.nodes.push(node);
     return true;
   }
 
-  setDevice(device) {
+  setDevice(device): boolean {
     for (const node of this.nodes) {
       node.device = device;
     }
+    return true;
   }
 
   toProto(): DeviceConfiguration {
