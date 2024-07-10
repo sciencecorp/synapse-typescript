@@ -4,7 +4,6 @@ import { NodeConfig } from "../api/synapse/NodeConfig";
 import { NodeType } from "../api/synapse/NodeType";
 import ChannelMask from "../channel_mask";
 import Node from "../node";
-import { parseAddress } from "../utils/addr";
 
 const kMulticastTTL = 3;
 
@@ -46,33 +45,27 @@ class StreamOut extends Node {
       return false;
     }
 
-    const addr = parseAddress(socket.bind);
-    if (!addr.host || !addr.port) {
-      console.error(`Invalid bind address: ${socket.bind}`);
+    const port = socket.bind;
+    const addr = this._getAddr();
+    if (!addr) {
+      console.error(`Invalid bind address: ${addr}`);
       return false;
     }
 
-    if (!this._socket) {
-      this._socket = dgram.createSocket("udp4");
+    this._socket = dgram.createSocket("udp4");
 
-      this._socket.on("error", (err: any) => {});
+    this._socket.on("error", (err: any) => {});
 
-      this._socket.on("message", (msg: Buffer, rinfo: any) => {
-        this._onMessage?.(msg);
-      });
+    this._socket.on("message", (msg: Buffer, rinfo: any) => {
+      this._onMessage?.(msg);
+    });
 
-      this._socket.bind(addr.port, () => {
-        if (this.multicastGroup) {
-          const group = parseAddress(this.multicastGroup);
-          if (!group.host) {
-            return false;
-          }
-
-          this._socket.setMulticastTTL(kMulticastTTL);
-          this._socket.addMembership(group.host);
-        }
-      });
-    }
+    this._socket.bind(port, addr, () => {
+      if (this.multicastGroup) {
+        this._socket.setMulticastTTL(kMulticastTTL);
+        this._socket.addMembership(addr);
+      }
+    });
 
     return true;
   }
@@ -93,6 +86,18 @@ class StreamOut extends Node {
       },
     });
   }
+
+  _getAddr = (): string | null => {
+    if (this.device === null) {
+      return null;
+    }
+
+    if (this.multicastGroup) {
+      return this.multicastGroup;
+    }
+
+    return this.device.uri.split(":")[0];
+  };
 }
 
 export default StreamOut;

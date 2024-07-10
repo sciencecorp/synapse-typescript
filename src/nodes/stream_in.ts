@@ -3,7 +3,6 @@ import dgram from "dgram";
 import { NodeConfig } from "../api/synapse/NodeConfig";
 import { NodeType } from "../api/synapse/NodeType";
 import Node from "../node";
-import { parseAddress } from "../utils/addr";
 
 const kDefaultStreamInConfig = {
   shape: [2048, 1],
@@ -34,8 +33,9 @@ class StreamIn extends Node {
       return false;
     }
 
-    const addr = parseAddress(socket.bind);
-    if (!addr.host || !addr.port) {
+    const port = socket.bind;
+    const addr = this._getAddr();
+    if (!addr || !port) {
       return false;
     }
 
@@ -46,7 +46,7 @@ class StreamIn extends Node {
     }
 
     try {
-      this._socket.send(data, addr.port, addr.host);
+      this._socket.send(data, port, addr);
     } catch (e) {
       return false;
     }
@@ -62,6 +62,18 @@ class StreamIn extends Node {
       },
     });
   }
+
+  _getAddr = (): string | null => {
+    if (this.device === null) {
+      return null;
+    }
+
+    if (this.multicastGroup) {
+      return this.multicastGroup;
+    }
+
+    return this.device.uri.split(":")[0];
+  };
 }
 
 export default StreamIn;
