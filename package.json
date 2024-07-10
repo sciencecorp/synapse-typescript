@@ -9,7 +9,8 @@
     "demo": "node ./dist/demo.js",
     "discover": "node ./dist/utils/discover.js",
     "generate": "./scripts/generate.sh",
-    "lint": "tsc --noEmit && eslint --ext .ts,.tsx ."
+    "lint": "tsc --noEmit && eslint --ext .ts,.tsx .",
+    "postinstall": "git submodule update --init && npm run generate"
   },
   "repository": {
     "type": "git",
