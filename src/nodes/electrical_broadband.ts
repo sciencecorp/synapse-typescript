@@ -27,6 +27,14 @@ class ElectricalBroadband extends Node {
       },
     });
   }
+
+  static _fromProto(proto: NodeConfig): ElectricalBroadband {
+    const { config } = proto;
+    if (config !== "electricalBroadband") {
+      throw new Error(`Invalid config type: ${config}`);
+    }
+    return new ElectricalBroadband(new ChannelMask());
+  }
 }
 
 export default ElectricalBroadband;

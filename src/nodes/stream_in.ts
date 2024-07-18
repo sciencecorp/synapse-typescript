@@ -74,6 +74,15 @@ class StreamIn extends Node {
 
     return this.device.uri.split(":")[0];
   };
+
+  static _fromProto(proto: NodeConfig): StreamIn {
+    const { config } = proto;
+    if (config !== "streamIn") {
+      throw new Error(`Invalid config type: ${config}`);
+    }
+    const { multicastGroup } = proto.streamIn;
+    return new StreamIn({ multicastGroup });
+  }
 }
 
 export default StreamIn;

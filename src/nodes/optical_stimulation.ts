@@ -27,6 +27,14 @@ class OpticalStimulation extends Node {
       },
     });
   }
+
+  static _fromProto(proto: NodeConfig): OpticalStimulation {
+    const { config } = proto;
+    if (config !== "opticalStim") {
+      throw new Error(`Invalid config type: ${config}`);
+    }
+    return new OpticalStimulation(new ChannelMask());
+  }
 }
 
 export default OpticalStimulation;

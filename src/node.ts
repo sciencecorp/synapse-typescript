@@ -14,6 +14,17 @@ class Node {
       type: this.type,
     };
   }
+
+  static _fromProto(_: NodeConfig): Node {
+    throw new Error("Not implemented");
+  }
+
+  static fromProto(proto: NodeConfig): Node {
+    const node = Node._fromProto(proto);
+    node.id = proto.id;
+    node.type = proto.type;
+    return node;
+  }
 }
 
 export default Node;

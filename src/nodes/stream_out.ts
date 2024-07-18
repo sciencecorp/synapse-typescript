@@ -96,6 +96,15 @@ class StreamOut extends Node {
 
     return this.device.uri.split(":")[0];
   };
+
+  static _fromProto(proto: NodeConfig): StreamOut {
+    const { config } = proto;
+    if (config !== "streamOut") {
+      throw new Error(`Invalid config type: ${config}`);
+    }
+    const { multicastGroup } = proto.streamIn;
+    return new StreamOut({ multicastGroup });
+  }
 }
 
 export default StreamOut;

@@ -1,7 +1,18 @@
 import Node from "./node";
 import { DeviceConfiguration } from "./api/synapse/DeviceConfiguration";
+import { NodeType } from "./api/synapse/NodeType";
+import ElectricalBroadband from "./nodes/electrical_broadband";
+import OpticalStimulation from "./nodes/optical_stimulation";
+import StreamIn from "./nodes/stream_in";
+import StreamOut from "./nodes/stream_out";
 
 type Connection = [number, number];
+const kNodeTypeObjectMap = {
+  [NodeType.kElectricalBroadband]: ElectricalBroadband,
+  [NodeType.kOpticalStim]: OpticalStimulation,
+  [NodeType.kStreamIn]: StreamIn,
+  [NodeType.kStreamOut]: StreamOut,
+};
 
 class Config {
   connections: Connection[] = [];
@@ -42,6 +53,37 @@ class Config {
       node.device = device;
     }
     return true;
+  }
+
+  static fromProto(proto: DeviceConfiguration): Config {
+    const { nodes = [], connections = [] } = proto;
+    const config = new Config();
+
+    for (const nodeProto of nodes) {
+      const { type } = nodeProto;
+      const NodeType = kNodeTypeObjectMap[type];
+      if (!NodeType) {
+        continue;
+      }
+
+      const node = NodeType.fromProto(nodeProto);
+      if (!!node.id) {
+        config.nodes.push(node);
+      } else {
+        config.addNode(node);
+      }
+    }
+
+    for (const connection of connections) {
+      const from = config.nodes.find((node) => node.id === connection.srcNodeId);
+      const to = config.nodes.find((node) => node.id === connection.dstNodeId);
+      if (!from || !to) {
+        continue;
+      }
+      config.connect(from, to);
+    }
+
+    return config;
   }
 
   toProto(): DeviceConfiguration {
