@@ -30,7 +30,7 @@ class Config {
 
   addNode(node: Node): boolean {
     if (!!node.id) {
-      return true;
+      return false;
     }
     node.id = this._genNodeId();
     this.nodes.push(node);

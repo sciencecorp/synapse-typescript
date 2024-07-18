@@ -9,12 +9,15 @@ import { create } from "./utils/client";
 import { getName } from "./utils/enum";
 
 class Device {
-  rpc: any;
-  channel: Channel;
+  rpc: any | null = null;
+  channel: Channel | null = null;
   sockets: NodeSocket[] = [];
 
   constructor(public uri: string) {
     this.rpc = create(uri, credentials.createInsecure());
+    if (!this.rpc) {
+      throw new Error(`Failed to create client for ${uri}`);
+    }
   }
 
   async configure(config: Config): Promise<boolean> {

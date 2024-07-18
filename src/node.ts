@@ -3,7 +3,7 @@ import { NodeType } from "./api/synapse/NodeType";
 import Device from "./device";
 
 class Node {
-  id: number;
+  id?: number;
   type: NodeType = NodeType.kNodeTypeUnknown;
   device: Device | null = null;
 

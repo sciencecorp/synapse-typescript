@@ -20,13 +20,7 @@ class StreamOut extends Node {
   _socket: dgram.Socket;
   _onMessage: ((msg: Buffer) => void) | null;
 
-  constructor(
-    args: StreamOutArgs = {
-      channelMask: new ChannelMask(),
-      multicastGroup: null,
-      onMessage: null,
-    }
-  ) {
+  constructor(args: StreamOutArgs = { channelMask: new ChannelMask() }) {
     super();
 
     const { channelMask, multicastGroup, onMessage } = args;
@@ -61,6 +55,10 @@ class StreamOut extends Node {
     });
 
     this._socket.bind(port, addr, () => {
+      if (!this._socket) {
+        return;
+      }
+
       if (this.multicastGroup) {
         this._socket.setMulticastTTL(kMulticastTTL);
         this._socket.addMembership(addr);
