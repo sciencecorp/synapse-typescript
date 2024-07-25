@@ -4,9 +4,6 @@
   "description": "Client library and CLI for the Synapse API",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
   "scripts": {
     "dist:proto": "rsync -av --include='*/' --include='*.proto' --include='README.md' --exclude='*' synapse-api/ dist/synapse-api",
     "dist": "npm run generate && npm run build && npm run dist:proto",
