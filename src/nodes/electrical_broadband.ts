@@ -28,7 +28,7 @@ class ElectricalBroadband extends Node {
     });
   }
 
-  static _fromProto(proto: NodeConfig): ElectricalBroadband {
+  static fromProto(proto: NodeConfig): ElectricalBroadband {
     const { config } = proto;
     if (config !== "electricalBroadband") {
       throw new Error(`Invalid config type: ${config}`);
