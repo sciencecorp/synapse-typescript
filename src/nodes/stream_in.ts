@@ -1,5 +1,6 @@
 import dgram from "dgram";
 
+import { DataType } from "../api/synapse/DataType";
 import { NodeConfig } from "../api/synapse/NodeConfig";
 import { NodeType } from "../api/synapse/NodeType";
 import Node from "../node";
@@ -9,18 +10,20 @@ const kDefaultStreamInConfig = {
 };
 
 export interface StreamInArgs {
+  dataType: DataType;
   shape?: number[];
-  multicastGroup?: string;
 }
 
 class StreamIn extends Node {
   type = NodeType.kStreamIn;
-  multicastGroup: string;
+  dataType: DataType;
+  shape: number[];
   _socket: dgram.Socket;
 
-  constructor(args: StreamInArgs) {
+  constructor(args: StreamInArgs = { dataType: DataType.kDataTypeUnknown }) {
     super();
-    this.multicastGroup = args.multicastGroup || null;
+    this.dataType = args.dataType || DataType.kDataTypeUnknown;
+    this.shape = args.shape || [];
   }
 
   write(data: string | Buffer): boolean {
@@ -33,20 +36,27 @@ class StreamIn extends Node {
       return false;
     }
 
-    const port = socket.bind;
-    const addr = this._getAddr();
-    if (!addr || !port) {
+    const split = socket.bind.split(":");
+    if (split.length !== 2) {
+      return false;
+    }
+
+    const port = parseInt(split[1]);
+    if (isNaN(port)) {
+      return false;
+    }
+
+    const host = split[0];
+    if (!host || !port) {
       return false;
     }
 
     if (!this._socket) {
       this._socket = dgram.createSocket("udp4");
-
-      this._socket.on("error", (err: any) => {});
     }
 
     try {
-      this._socket.send(data, port, addr);
+      this._socket.send(data, port, host);
     } catch (e) {
       return false;
     }
@@ -58,7 +68,8 @@ class StreamIn extends Node {
     return super.toProto({
       streamIn: {
         ...kDefaultStreamInConfig,
-        multicastGroup: this.multicastGroup,
+        dataType: this.dataType,
+        shape: this.shape,
       },
     });
   }
@@ -66,10 +77,6 @@ class StreamIn extends Node {
   _getAddr = (): string | null => {
     if (this.device === null) {
       return null;
-    }
-
-    if (this.multicastGroup) {
-      return this.multicastGroup;
     }
 
     return this.device.uri.split(":")[0];
@@ -80,8 +87,12 @@ class StreamIn extends Node {
     if (config !== "streamIn") {
       throw new Error(`Invalid config type: ${config}`);
     }
-    const { multicastGroup } = proto.streamIn;
-    return new StreamIn({ multicastGroup });
+
+    const { dataType = DataType.kDataTypeUnknown, shape = [] } = proto.streamIn;
+    return new StreamIn({
+      dataType,
+      shape,
+    });
   }
 }
 

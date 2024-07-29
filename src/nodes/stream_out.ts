@@ -1,31 +1,34 @@
 import dgram from "dgram";
 
+import { DataType } from "../api/synapse/DataType";
 import { NodeConfig } from "../api/synapse/NodeConfig";
 import { NodeType } from "../api/synapse/NodeType";
-import ChannelMask from "../channel_mask";
 import Node from "../node";
 
 const kMulticastTTL = 3;
 
 export interface StreamOutArgs {
-  channelMask?: ChannelMask;
+  dataType: DataType;
+  shape: number[];
   multicastGroup?: string;
   onMessage?: (msg: Buffer) => void;
 }
 
 class StreamOut extends Node {
   type = NodeType.kStreamOut;
-  channelMask: ChannelMask;
+  dataType: DataType;
+  shape: number[];
   multicastGroup: string;
   _socket: dgram.Socket;
   _onMessage: ((msg: Buffer) => void) | null;
 
-  constructor(args: StreamOutArgs = { channelMask: new ChannelMask() }) {
+  constructor(args: StreamOutArgs = { dataType: DataType.kDataTypeUnknown, shape: [] }) {
     super();
 
-    const { channelMask, multicastGroup, onMessage } = args;
-    this.channelMask = channelMask;
+    const { dataType, shape, multicastGroup, onMessage } = args;
+    this.dataType = dataType || DataType.kDataTypeUnknown;
     this.multicastGroup = multicastGroup;
+    this.shape = shape || [];
     this._onMessage = onMessage;
   }
 
@@ -39,10 +42,19 @@ class StreamOut extends Node {
       return false;
     }
 
-    const port = socket.bind;
-    const addr = this._getAddr();
-    if (!addr) {
-      console.error(`Invalid bind address: ${addr}`);
+    const split = socket.bind.split(":");
+    if (split.length !== 2) {
+      return false;
+    }
+
+    const port = parseInt(split[1]);
+    if (isNaN(port)) {
+      return false;
+    }
+
+    const host = this.multicastGroup ? this.multicastGroup : split[0];
+    if (!host) {
+      console.error(`Invalid bind address: ${host}`);
       return false;
     }
 
@@ -51,17 +63,19 @@ class StreamOut extends Node {
     this._socket.on("error", (err: any) => {});
 
     this._socket.on("message", (msg: Buffer, rinfo: any) => {
+      console.log(`StreamOut | recv: ${msg.readUInt32BE()}`);
       this._onMessage?.(msg);
     });
 
-    this._socket.bind(port, addr, () => {
+    console.log(`Binding to ${host}:${port}`);
+    this._socket.bind(port, host, () => {
       if (!this._socket) {
         return;
       }
 
       if (this.multicastGroup) {
         this._socket.setMulticastTTL(kMulticastTTL);
-        this._socket.addMembership(addr);
+        this._socket.addMembership(this.multicastGroup);
       }
     });
 
@@ -79,31 +93,25 @@ class StreamOut extends Node {
   toProto(): NodeConfig {
     return super.toProto({
       streamOut: {
-        chMask: this.channelMask ? Array.from(this.channelMask.iterChannels()) : null,
+        dataType: this.dataType,
+        shape: this.shape,
         multicastGroup: this.multicastGroup,
+        useMulticast: !!this.multicastGroup,
       },
     });
   }
-
-  _getAddr = (): string | null => {
-    if (this.device === null) {
-      return null;
-    }
-
-    if (this.multicastGroup) {
-      return this.multicastGroup;
-    }
-
-    return this.device.uri.split(":")[0];
-  };
 
   static fromProto(proto: NodeConfig): StreamOut {
     const { config } = proto;
     if (config !== "streamOut") {
       throw new Error(`Invalid config type: ${config}`);
     }
-    const { multicastGroup } = proto.streamIn;
-    return new StreamOut({ multicastGroup });
+    const { dataType, shape, multicastGroup, useMulticast } = proto.streamOut;
+    return new StreamOut({
+      dataType: dataType,
+      shape: shape,
+      multicastGroup: useMulticast ? multicastGroup : undefined,
+    });
   }
 }
 

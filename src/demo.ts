@@ -2,9 +2,10 @@ import fs from "fs";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
-import { StatusCode } from "./api/synapse/StatusCode";
+import { DataType } from "./api/synapse/DataType";
 import { DeviceState } from "./api/synapse/DeviceState";
 import { NodeType } from "./api/synapse/NodeType";
+import { StatusCode } from "./api/synapse/StatusCode";
 import Config from "./config";
 import Device from "./device";
 import ElectricalBroadband from "./nodes/electrical_broadband";
@@ -35,11 +36,6 @@ const cli = yargs(hideBin(process.argv))
     },
   })
   .command("write", "Write to StreamIn node", {
-    "multicast-group": {
-      alias: "m",
-      type: "string",
-      description: "Multicast group",
-    },
     input: {
       alias: "i",
       type: "string",
@@ -114,7 +110,9 @@ const read = async (device: Device, argv: any) => {
   const config = new Config();
   const nodeEphys = new ElectricalBroadband();
   const nodeStreamOut = new StreamOut({
+    dataType: DataType.kBroadband,
     multicastGroup,
+    shape: [4],
     onMessage,
   });
 
@@ -145,7 +143,9 @@ const read = async (device: Device, argv: any) => {
 
   let running = true;
   process.on("SIGINT", function () {
-    if (!running) return;
+    if (!running) {
+      return;
+    }
 
     running = false;
     nodeStreamOut.stop();
@@ -154,7 +154,7 @@ const read = async (device: Device, argv: any) => {
 };
 
 const write = async (device: Device, argv: any) => {
-  const { multicastGroup, input } = argv;
+  const { input } = argv;
 
   if (input && !fs.existsSync(input)) {
     console.error(`File not found: ${input}`);
@@ -165,7 +165,10 @@ const write = async (device: Device, argv: any) => {
   let ok = true;
 
   const config = new Config();
-  const nodeStreamIn = new StreamIn({ multicastGroup });
+  const nodeStreamIn = new StreamIn({
+    dataType: DataType.kBroadband,
+    shape: [4],
+  });
   const nodeOptical = new OpticalStimulation();
 
   ok = config.add([nodeStreamIn, nodeOptical]);
@@ -272,9 +275,8 @@ const main = async () => {
   console.log(`Connecting to device @ ${uri}`);
   const device = new Device(uri);
 
-  let ok = false;
   try {
-    ok = await info(device);
+    await info(device);
   } catch (e) {
     console.error(e);
     return;
