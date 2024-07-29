@@ -1,11 +1,13 @@
-const kChannelMaskAll = "all";
-
 class ChannelMask {
-  constructor(mask: string = kChannelMaskAll) {}
+  mask: number[];
+
+  constructor(mask: number[]) {
+    this.mask = mask;
+  }
 
   *iterChannels() {
-    for (let i = 0; i < 15; i++) {
-      yield i;
+    for (let i = 0; i < this.mask.length; i++) {
+      yield this.mask[i];
     }
   }
 }

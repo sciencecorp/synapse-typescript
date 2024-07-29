@@ -1,29 +1,30 @@
+import { OpticalStimConfig } from "../api/synapse/OpticalStimConfig";
 import { NodeConfig } from "../api/synapse/NodeConfig";
 import { NodeType } from "../api/synapse/NodeType";
 import ChannelMask from "../channel_mask";
 import Node from "../node";
 
-const kDefaultOpticalStimConfig = {
-  bit_width: 10,
-  gain: 1,
-  peripheral_id: 0,
-  sample_rate: 20000,
-};
-
 class OpticalStimulation extends Node {
   type = NodeType.kOpticalStim;
-  channelMask: ChannelMask;
+  config: Omit<OpticalStimConfig, "pixelMask"> & {
+    pixelMask?: ChannelMask;
+  };
 
-  constructor(channelMask = new ChannelMask()) {
+  constructor(config: OpticalStimConfig = {}) {
     super();
-    this.channelMask = channelMask;
+
+    const { pixelMask, ...rest } = config;
+    this.config = {
+      ...rest,
+      pixelMask: new ChannelMask(pixelMask || []),
+    };
   }
 
   toProto(): NodeConfig {
     return super.toProto({
       opticalStim: {
-        ...kDefaultOpticalStimConfig,
-        pixelMask: Array.from(this.channelMask.iterChannels()),
+        ...this.config,
+        pixelMask: Array.from(this.config.pixelMask.iterChannels() || []),
       },
     });
   }
@@ -33,7 +34,7 @@ class OpticalStimulation extends Node {
     if (config !== "opticalStim") {
       throw new Error(`Invalid config type: ${config}`);
     }
-    return new OpticalStimulation(new ChannelMask());
+    return new OpticalStimulation(proto.opticalStim);
   }
 }
 
