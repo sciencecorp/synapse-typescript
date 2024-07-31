@@ -271,9 +271,13 @@ const main = async () => {
   }
 
   const { uri } = argv;
+  if (!uri) {
+    console.error("Missing URI");
+    return;
+  }
 
   console.log(`Connecting to device @ ${uri}`);
-  const device = new Device(uri);
+  const device = new Device(uri as string);
 
   try {
     await info(device);
