@@ -1,18 +1,17 @@
-import { NodeConfig } from "./api/synapse/NodeConfig";
-import { NodeType } from "./api/synapse/NodeType";
+import { synapse } from "./api/api";
 import Device from "./device";
 
 class Node {
   id?: number;
-  type: NodeType = NodeType.kNodeTypeUnknown;
+  type: synapse.NodeType = synapse.NodeType.kNodeTypeUnknown;
   device: Device | null = null;
 
-  toProto(config: NodeConfig = {}): NodeConfig {
-    return {
+  toProto(config: synapse.INodeConfig = {}): synapse.NodeConfig {
+    return new synapse.NodeConfig({
       ...config,
       id: this.id,
       type: this.type,
-    };
+    });
   }
 }
 

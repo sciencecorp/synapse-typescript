@@ -11,9 +11,8 @@
     "synapse-api"
   ],
   "scripts": {
-    "dist:proto": "rsync -av --include='*/' --include='*.proto' --include='README.md' --exclude='*' synapse-api/ dist/synapse-api",
-    "dist": "npm run generate && npm run build && npm run dist:proto",
-    "build": "tsc",
+    "dist": "npm run generate && npm run build",
+    "build": "./scripts/build.sh",
     "clean": "rm -rf dist src/api",
     "demo": "node ./dist/demo.js",
     "discover": "node ./dist/demo.js discover",
@@ -32,6 +31,7 @@
   "homepage": "https://github.com/sciencecorp/synapse-client-typescript#readme",
   "devDependencies": {
     "eslint": "^9.5.0",
+    "protobufjs-cli": "^1.1.2",
     "typescript": "^5.5.2"
   },
   "dependencies": {

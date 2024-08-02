@@ -1,6 +1,5 @@
 import Node from "./node";
-import { DeviceConfiguration } from "./api/synapse/DeviceConfiguration";
-import { NodeType } from "./api/synapse/NodeType";
+import { synapse } from "./api/api";
 import ElectricalBroadband from "./nodes/electrical_broadband";
 import OpticalStimulation from "./nodes/optical_stimulation";
 import StreamIn from "./nodes/stream_in";
@@ -8,10 +7,10 @@ import StreamOut from "./nodes/stream_out";
 
 type Connection = [number, number];
 const kNodeTypeObjectMap = {
-  [NodeType.kElectricalBroadband]: ElectricalBroadband,
-  [NodeType.kOpticalStim]: OpticalStimulation,
-  [NodeType.kStreamIn]: StreamIn,
-  [NodeType.kStreamOut]: StreamOut,
+  [synapse.NodeType.kElectricalBroadband]: ElectricalBroadband,
+  [synapse.NodeType.kOpticalStim]: OpticalStimulation,
+  [synapse.NodeType.kStreamIn]: StreamIn,
+  [synapse.NodeType.kStreamOut]: StreamOut,
 };
 
 class Config {
@@ -55,7 +54,7 @@ class Config {
     return true;
   }
 
-  static fromProto(proto: DeviceConfiguration): Config {
+  static fromProto(proto: synapse.IDeviceConfiguration): Config {
     const { nodes = [], connections = [] } = proto;
     const config = new Config();
 
@@ -87,8 +86,8 @@ class Config {
     return config;
   }
 
-  toProto(): DeviceConfiguration {
-    return {
+  toProto(): synapse.DeviceConfiguration {
+    return new synapse.DeviceConfiguration({
       nodes: this.nodes.map((node) => node.toProto()),
       connections: this.connections.map((connection) => {
         return {
@@ -96,7 +95,7 @@ class Config {
           dstNodeId: connection[1],
         };
       }),
-    };
+    });
   }
 }
 

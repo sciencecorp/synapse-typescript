@@ -1,32 +1,23 @@
 import dgram from "dgram";
 
-import { DataType } from "../api/synapse/DataType";
-import { NodeConfig } from "../api/synapse/NodeConfig";
-import { NodeType } from "../api/synapse/NodeType";
+import { synapse } from "../api/api";
 import Node from "../node";
 
 const kMulticastTTL = 3;
 
-export interface StreamOutArgs {
-  dataType: DataType;
-  shape: number[];
-  multicastGroup?: string;
-  onMessage?: (msg: Buffer) => void;
-}
-
 class StreamOut extends Node {
-  type = NodeType.kStreamOut;
-  dataType: DataType;
+  type = synapse.NodeType.kStreamOut;
+  dataType: synapse.DataType;
   shape: number[];
   multicastGroup: string;
   _socket: dgram.Socket;
   _onMessage: ((msg: Buffer) => void) | null;
 
-  constructor(args: StreamOutArgs = { dataType: DataType.kDataTypeUnknown, shape: [] }) {
+  constructor(config: synapse.IStreamOutConfig & { onMessage?: (msg: Buffer) => void } = {}) {
     super();
 
-    const { dataType, shape, multicastGroup, onMessage } = args;
-    this.dataType = dataType || DataType.kDataTypeUnknown;
+    const { dataType, shape, multicastGroup, onMessage } = config;
+    this.dataType = dataType || synapse.DataType.kDataTypeUnknown;
     this.multicastGroup = multicastGroup;
     this.shape = shape || [];
     this._onMessage = onMessage;
@@ -90,7 +81,7 @@ class StreamOut extends Node {
     return true;
   }
 
-  toProto(): NodeConfig {
+  toProto(): synapse.NodeConfig {
     return super.toProto({
       streamOut: {
         dataType: this.dataType,
@@ -101,12 +92,13 @@ class StreamOut extends Node {
     });
   }
 
-  static fromProto(proto: NodeConfig): StreamOut {
-    const { config } = proto;
-    if (config !== "streamOut") {
-      throw new Error(`Invalid config type: ${config}`);
+  static fromProto(proto: synapse.INodeConfig): StreamOut {
+    const { streamOut } = proto;
+    if (!streamOut) {
+      throw new Error("Invalid config, missing streamOut");
     }
-    const { dataType, shape, multicastGroup, useMulticast } = proto.streamOut;
+
+    const { dataType, shape, multicastGroup, useMulticast } = streamOut;
     return new StreamOut({
       dataType: dataType,
       shape: shape,

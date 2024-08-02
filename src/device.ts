@@ -1,9 +1,6 @@
 import { Channel, credentials } from "@grpc/grpc-js";
 
-import { DeviceInfo } from "./api/synapse/DeviceInfo";
-import { NodeSocket } from "./api/synapse/NodeSocket";
-import { Status } from "./api/synapse/Status";
-import { StatusCode } from "./api/synapse/StatusCode";
+import { synapse } from "./api/api";
 import Config from "./config";
 import { create } from "./utils/client";
 import { getName } from "./utils/enum";
@@ -11,7 +8,7 @@ import { getName } from "./utils/enum";
 class Device {
   rpc: any | null = null;
   channel: Channel | null = null;
-  sockets: NodeSocket[] = [];
+  sockets: synapse.INodeSocket[] = [];
 
   constructor(public uri: string) {
     this.rpc = create(uri, credentials.createInsecure());
@@ -31,15 +28,14 @@ class Device {
           if (this._handleStatusResponse(res!)) {
             resolve(true);
           } else {
-            const { status } = res;
-            reject(`Error configuring device: (code: ${getName(StatusCode, status.code)}) ${status.message}`);
+            reject(`Error configuring device: (code: ${getName(synapse.StatusCode, res.code)}) ${res.message}`);
           }
         }
       });
     });
   }
 
-  async info(): Promise<DeviceInfo> {
+  async info(): Promise<synapse.DeviceInfo> {
     return new Promise((resolve, reject) => {
       this.rpc.info({}, (err, res) => {
         if (err) {
@@ -60,8 +56,7 @@ class Device {
           if (this._handleStatusResponse(res!)) {
             resolve(true);
           } else {
-            const { status } = res;
-            reject(`Error starting device: (code: ${getName(StatusCode, status.code)}) ${status.message}`);
+            reject(`Error starting device: (code: ${getName(synapse.StatusCode, res.code)}) ${res.message}`);
           }
         }
       });
@@ -77,19 +72,19 @@ class Device {
           if (this._handleStatusResponse(res!)) {
             resolve(true);
           } else {
-            const { status } = res;
-            reject(`Error stopping device: (code: ${getName(StatusCode, status.code)}) ${status.message}`);
+            reject(`Error stopping device: (code: ${getName(synapse.StatusCode, res.code)}) ${res.message}`);
           }
         }
       });
     });
   }
 
-  _handleStatusResponse(status: Status): boolean {
-    if (status.code !== StatusCode.kOk) {
+  _handleStatusResponse(status: synapse.Status): boolean {
+    const { code, sockets } = status;
+    if (code && (code as any) !== synapse.StatusCode.kOk) {
       return false;
     } else {
-      this.sockets = status.sockets || [];
+      this.sockets = sockets || [];
       return true;
     }
   }
