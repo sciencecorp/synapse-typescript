@@ -1,17 +1,15 @@
-import { ElectricalBroadbandConfig } from "../api/synapse/ElectricalBroadbandConfig";
-import { NodeConfig } from "../api/synapse/NodeConfig";
-import { NodeType } from "../api/synapse/NodeType";
+import { synapse } from "../api/api";
 import ChannelMask from "../channel_mask";
 import Node from "../node";
 
 class ElectricalBroadband extends Node {
-  type = NodeType.kElectricalBroadband;
+  type = synapse.NodeType.kElectricalBroadband;
 
-  config: Omit<ElectricalBroadbandConfig, "chMask"> & {
+  config: Omit<synapse.IElectricalBroadbandConfig, "chMask"> & {
     chMask?: ChannelMask;
   };
 
-  constructor(config: ElectricalBroadbandConfig = {}) {
+  constructor(config: synapse.IElectricalBroadbandConfig = {}) {
     super();
 
     const { chMask, ...rest } = config;
@@ -21,7 +19,7 @@ class ElectricalBroadband extends Node {
     };
   }
 
-  toProto(): NodeConfig {
+  toProto(): synapse.NodeConfig {
     return super.toProto({
       electricalBroadband: {
         ...this.config,
@@ -30,11 +28,12 @@ class ElectricalBroadband extends Node {
     });
   }
 
-  static fromProto(proto: NodeConfig): ElectricalBroadband {
-    const { config } = proto;
-    if (config !== "electricalBroadband") {
-      throw new Error(`Invalid config type: ${config}`);
+  static fromProto(proto: synapse.NodeConfig): ElectricalBroadband {
+    const { electricalBroadband } = proto;
+    if (!electricalBroadband) {
+      throw new Error("Invalid config, missing electricalBroadband");
     }
+
     return new ElectricalBroadband(proto.electricalBroadband);
   }
 }

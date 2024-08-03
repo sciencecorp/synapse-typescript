@@ -2,10 +2,7 @@ import fs from "fs";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
-import { DataType } from "./api/synapse/DataType";
-import { DeviceState } from "./api/synapse/DeviceState";
-import { NodeType } from "./api/synapse/NodeType";
-import { StatusCode } from "./api/synapse/StatusCode";
+import { synapse } from "./api/api";
 import Config from "./config";
 import Device from "./device";
 import ElectricalBroadband from "./nodes/electrical_broadband";
@@ -60,11 +57,11 @@ const info = async (device: Device) => {
   console.log(` - firmware version:               ${firmwareVersion || "<unknown>"}`);
 
   console.log(
-    ` - status:                         ${status.code} (${getName(StatusCode, status.code)})${
+    ` - status:                         ${status.code} (${getName(synapse.StatusCode, status.code)})${
       status.message ? `: "${status.message}"` : ""
     }`
   );
-  console.log(`   - state:                          ${getName(DeviceState, status.state)}`);
+  console.log(`   - state:                          ${getName(synapse.DeviceState, status.state)}`);
 
   console.log(`   - sockets:                        ${status.sockets?.length || 0}`);
   status.sockets?.forEach(({ nodeId, bind }) => {
@@ -81,7 +78,7 @@ const info = async (device: Device) => {
     console.log(` - configuration:`);
     console.log(`   - nodes:                        ${nodes?.length || 0}`);
     nodes?.forEach(({ id, type }) => {
-      console.log(`     - [${id}] (${getName(NodeType, type)})`);
+      console.log(`     - [${id}] (${getName(synapse.NodeType, type)})`);
     });
   }
 
@@ -110,7 +107,7 @@ const read = async (device: Device, argv: any) => {
   const config = new Config();
   const nodeEphys = new ElectricalBroadband();
   const nodeStreamOut = new StreamOut({
-    dataType: DataType.kBroadband,
+    dataType: synapse.DataType.kBroadband,
     multicastGroup,
     shape: [4],
     onMessage,
@@ -166,7 +163,7 @@ const write = async (device: Device, argv: any) => {
 
   const config = new Config();
   const nodeStreamIn = new StreamIn({
-    dataType: DataType.kBroadband,
+    dataType: synapse.DataType.kBroadband,
     shape: [4],
   });
   const nodeOptical = new OpticalStimulation();

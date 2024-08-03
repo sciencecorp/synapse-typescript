@@ -1,8 +1,6 @@
 import dgram from "dgram";
 
-import { DataType } from "../api/synapse/DataType";
-import { NodeConfig } from "../api/synapse/NodeConfig";
-import { NodeType } from "../api/synapse/NodeType";
+import { synapse } from "../api/api";
 import Node from "../node";
 
 const kDefaultStreamInConfig = {
@@ -10,20 +8,20 @@ const kDefaultStreamInConfig = {
 };
 
 export interface StreamInArgs {
-  dataType: DataType;
+  dataType: synapse.DataType;
   shape?: number[];
 }
 
 class StreamIn extends Node {
-  type = NodeType.kStreamIn;
-  dataType: DataType;
+  type = synapse.NodeType.kStreamIn;
+  dataType: synapse.DataType;
   shape: number[];
   _socket: dgram.Socket;
 
-  constructor(args: StreamInArgs = { dataType: DataType.kDataTypeUnknown }) {
+  constructor(config: synapse.IStreamInConfig = {}) {
     super();
-    this.dataType = args.dataType || DataType.kDataTypeUnknown;
-    this.shape = args.shape || [];
+    this.dataType = config.dataType || synapse.DataType.kDataTypeUnknown;
+    this.shape = config.shape || [];
   }
 
   write(data: string | Buffer): boolean {
@@ -64,7 +62,7 @@ class StreamIn extends Node {
     return true;
   }
 
-  toProto(): NodeConfig {
+  toProto(): synapse.NodeConfig {
     return super.toProto({
       streamIn: {
         ...kDefaultStreamInConfig,
@@ -82,13 +80,13 @@ class StreamIn extends Node {
     return this.device.uri.split(":")[0];
   };
 
-  static fromProto(proto: NodeConfig): StreamIn {
-    const { config } = proto;
-    if (config !== "streamIn") {
-      throw new Error(`Invalid config type: ${config}`);
+  static fromProto(proto: synapse.INodeConfig): StreamIn {
+    const { streamIn } = proto;
+    if (!streamIn) {
+      throw new Error("Invalid config, missing streamIn");
     }
 
-    const { dataType = DataType.kDataTypeUnknown, shape = [] } = proto.streamIn;
+    const { dataType = synapse.DataType.kDataTypeUnknown, shape = [] } = proto.streamIn;
     return new StreamIn({
       dataType,
       shape,
