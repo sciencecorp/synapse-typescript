@@ -7,19 +7,14 @@ const kMulticastTTL = 3;
 
 class StreamOut extends Node {
   type = synapse.NodeType.kStreamOut;
-  dataType: synapse.DataType;
-  shape: number[];
-  multicastGroup: string;
+  config: synapse.IStreamOutConfig;
   _socket: dgram.Socket;
   _onMessage: ((msg: Buffer) => void) | null;
 
-  constructor(config: synapse.IStreamOutConfig & { onMessage?: (msg: Buffer) => void } = {}) {
+  constructor(config: synapse.IStreamOutConfig, onMessage?: (msg: Buffer) => void) {
     super();
 
-    const { dataType, shape, multicastGroup, onMessage } = config;
-    this.dataType = dataType || synapse.DataType.kDataTypeUnknown;
-    this.multicastGroup = multicastGroup;
-    this.shape = shape || [];
+    this.config = config;
     this._onMessage = onMessage;
   }
 
@@ -43,7 +38,7 @@ class StreamOut extends Node {
       return false;
     }
 
-    const host = this.multicastGroup ? this.multicastGroup : split[0];
+    const host = this.config.useMulticast && this.config.multicastGroup ? this.config.multicastGroup : split[0];
     if (!host) {
       console.error(`Invalid bind address: ${host}`);
       return false;
@@ -64,9 +59,9 @@ class StreamOut extends Node {
         return;
       }
 
-      if (this.multicastGroup) {
+      if (this.config.multicastGroup) {
         this._socket.setMulticastTTL(kMulticastTTL);
-        this._socket.addMembership(this.multicastGroup);
+        this._socket.addMembership(this.config.multicastGroup);
       }
     });
 
@@ -83,12 +78,7 @@ class StreamOut extends Node {
 
   toProto(): synapse.NodeConfig {
     return super.toProto({
-      streamOut: {
-        dataType: this.dataType,
-        shape: this.shape,
-        multicastGroup: this.multicastGroup,
-        useMulticast: !!this.multicastGroup,
-      },
+      streamOut: this.config,
     });
   }
 
@@ -98,12 +88,7 @@ class StreamOut extends Node {
       throw new Error("Invalid config, missing streamOut");
     }
 
-    const { dataType, shape, multicastGroup, useMulticast } = streamOut;
-    return new StreamOut({
-      dataType: dataType,
-      shape: shape,
-      multicastGroup: useMulticast ? multicastGroup : undefined,
-    });
+    return new StreamOut(streamOut);
   }
 }
 

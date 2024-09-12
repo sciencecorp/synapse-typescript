@@ -1,29 +1,19 @@
 import { synapse } from "../api/api";
-import ChannelMask from "../channel_mask";
 import Node from "../node";
 
 class OpticalStimulation extends Node {
   type = synapse.NodeType.kOpticalStim;
-  config: Omit<synapse.IOpticalStimConfig, "pixelMask"> & {
-    pixelMask?: ChannelMask;
-  };
+  config: synapse.IOpticalStimConfig;
 
   constructor(config: synapse.IOpticalStimConfig = {}) {
     super();
 
-    const { pixelMask, ...rest } = config;
-    this.config = {
-      ...rest,
-      pixelMask: new ChannelMask(pixelMask || []),
-    };
+    this.config = config;
   }
 
   toProto(): synapse.NodeConfig {
     return super.toProto({
-      opticalStim: {
-        ...this.config,
-        pixelMask: Array.from(this.config.pixelMask.iterChannels() || []),
-      },
+      opticalStim: this.config,
     });
   }
 
