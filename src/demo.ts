@@ -105,13 +105,19 @@ const read = async (device: Device, argv: any) => {
   };
 
   const config = new Config();
-  const nodeEphys = new ElectricalBroadband();
-  const nodeStreamOut = new StreamOut({
-    dataType: synapse.DataType.kBroadband,
-    multicastGroup,
-    shape: [4],
-    onMessage,
+  const nodeEphys = new ElectricalBroadband({
+    peripheralId: 3,
+    channels: [{ id: 0, referenceId: 0, electrodeId: 1 }],
+    bitWidth: 12,
+    sampleRate: 16000,
   });
+  const nodeStreamOut = new StreamOut(
+    {
+      multicastGroup,
+      useMulticast: !!multicastGroup,
+    },
+    onMessage
+  );
 
   ok = config.add([nodeEphys, nodeStreamOut]);
   ok = config.connect(nodeEphys, nodeStreamOut);
@@ -164,7 +170,6 @@ const write = async (device: Device, argv: any) => {
   const config = new Config();
   const nodeStreamIn = new StreamIn({
     dataType: synapse.DataType.kBroadband,
-    shape: [4],
   });
   const nodeOptical = new OpticalStimulation();
 

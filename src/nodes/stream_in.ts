@@ -3,10 +3,6 @@ import dgram from "dgram";
 import { synapse } from "../api/api";
 import Node from "../node";
 
-const kDefaultStreamInConfig = {
-  shape: [2048, 1],
-};
-
 export interface StreamInArgs {
   dataType: synapse.DataType;
   shape?: number[];
@@ -14,14 +10,12 @@ export interface StreamInArgs {
 
 class StreamIn extends Node {
   type = synapse.NodeType.kStreamIn;
-  dataType: synapse.DataType;
-  shape: number[];
+  config: synapse.IStreamInConfig;
   _socket: dgram.Socket;
 
   constructor(config: synapse.IStreamInConfig = {}) {
     super();
-    this.dataType = config.dataType || synapse.DataType.kDataTypeUnknown;
-    this.shape = config.shape || [];
+    this.config = config;
   }
 
   write(data: string | Buffer): boolean {
@@ -64,11 +58,7 @@ class StreamIn extends Node {
 
   toProto(): synapse.NodeConfig {
     return super.toProto({
-      streamIn: {
-        ...kDefaultStreamInConfig,
-        dataType: this.dataType,
-        shape: this.shape,
-      },
+      streamIn: this.config,
     });
   }
 
@@ -86,11 +76,7 @@ class StreamIn extends Node {
       throw new Error("Invalid config, missing streamIn");
     }
 
-    const { dataType = synapse.DataType.kDataTypeUnknown, shape = [] } = proto.streamIn;
-    return new StreamIn({
-      dataType,
-      shape,
-    });
+    return new StreamIn(streamIn);
   }
 }
 
