@@ -1,14 +1,22 @@
 import Node from "./node";
 import { synapse } from "./api/api";
 import ElectricalBroadband from "./nodes/electrical_broadband";
+import ElectricalStimulation from "./nodes/electrical_stimulation";
+import OpticalBroadband from "./nodes/optical_broadband";
 import OpticalStimulation from "./nodes/optical_stimulation";
+import SpectralFilter from "./nodes/spectral_filter";
+import SpikeDetect from "./nodes/spike_detect";
 import StreamIn from "./nodes/stream_in";
 import StreamOut from "./nodes/stream_out";
 
 type Connection = [number, number];
 const kNodeTypeObjectMap = {
   [synapse.NodeType.kElectricalBroadband]: ElectricalBroadband,
+  [synapse.NodeType.kElectricalStim]: ElectricalStimulation,
+  [synapse.NodeType.kOpticalBroadband]: OpticalBroadband,
   [synapse.NodeType.kOpticalStim]: OpticalStimulation,
+  [synapse.NodeType.kSpectralFilter]: SpectralFilter,
+  [synapse.NodeType.kSpikeDetect]: SpikeDetect,
   [synapse.NodeType.kStreamIn]: StreamIn,
   [synapse.NodeType.kStreamOut]: StreamOut,
 };
