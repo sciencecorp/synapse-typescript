@@ -15,8 +15,6 @@
     "dist": "npm run generate && npm run build",
     "build": "./scripts/build.sh",
     "clean": "rm -rf dist src/api",
-    "demo": "node ./dist/demo.js",
-    "discover": "node ./dist/demo.js discover",
     "generate": "./scripts/generate.sh",
     "lint": "tsc --noEmit && eslint --ext .ts,.tsx .",
     "postinstall": "git submodule update --init && npm run dist"

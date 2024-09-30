@@ -40,7 +40,6 @@ class StreamOut extends Node {
 
     const host = this.config.multicastGroup;
     if (!host) {
-      console.error(`Invalid bind address: ${host}`);
       return false;
     }
 
@@ -49,11 +48,9 @@ class StreamOut extends Node {
     this._socket.on("error", (err: any) => {});
 
     this._socket.on("message", (msg: Buffer, rinfo: any) => {
-      console.log(`StreamOut | recv: ${msg.readUInt32BE()}`);
       this._onMessage?.(msg);
     });
 
-    console.log(`Binding to ${host}:${port}`);
     this._socket.bind(port, host, () => {
       if (!this._socket) {
         return;
