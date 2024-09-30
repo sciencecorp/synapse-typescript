@@ -5,8 +5,15 @@ const kDefaultTimeout = 3000;
 interface DiscoverArgs {
   host: string;
   port: number;
-  auth_code?: string;
   timeoutMs?: number;
+}
+
+class DeviceAdvertisement {
+  host: string;
+  port: number;
+  serial: string;
+  capability: string;
+  name: string;
 }
 
 const kDefaultDiscoverArgs: DiscoverArgs = {
@@ -15,43 +22,61 @@ const kDefaultDiscoverArgs: DiscoverArgs = {
   timeoutMs: kDefaultTimeout,
 };
 
-export const discover = (args = kDefaultDiscoverArgs) => {
-  const socket = dgram.createSocket("udp4");
+export const discover = (args = kDefaultDiscoverArgs): Promise<DeviceAdvertisement[]> => {
+  return new Promise((resolve, reject) => {
+    const devices: DeviceAdvertisement[] = [];
 
-  socket.on("message", (msg: Buffer, rinfo: any) => {
-    const server = `${rinfo.address}:${rinfo.port}`;
-    const message = msg.toString("ascii");
-    const split = message.split(" ");
+    const socket = dgram.createSocket("udp4");
 
-    if (split.length < 5) {
-      console.error(`invalid response from ${server}`);
-      return;
-    }
+    socket.on("message", (msg: Buffer, rinfo: any) => {
+      const server = `${rinfo.address}:${rinfo.port}`;
+      const message = msg.toString("ascii");
+      const split = message.split(" ");
 
-    if (split[0] !== "ID") {
-      console.error(`invalid response from ${server}`);
-      return;
-    }
+      if (split.length < 5) {
+        return;
+      }
 
-    const host = rinfo.address;
-    const [_, serial, capability, port, name] = split;
+      if (split[0] !== "ID") {
+        return;
+      }
 
-    const service = capability.split(/(\d+)/)[0];
-    if (service !== "SYN") {
-      return;
-    }
+      const host = rinfo.address;
+      const [_, serial, capability, portstr, name] = split;
+      const port = parseInt(portstr);
+      if (isNaN(port)) {
+        return;
+      }
 
-    console.log(`${host}:${port}   ${capability}   ${name} (${serial})`);
-    return;
-  });
+      const service = capability.split(/(\d+)/)[0];
+      if (service !== "SYN") {
+        return;
+      }
 
-  const payload = Buffer.from(`DISCOVER ${args.auth_code || 0}`, "ascii");
+      devices.push({
+        host,
+        port,
+        serial,
+        capability,
+        name,
+      });
+    });
 
-  console.log("Announcing...");
-  socket.send(payload, 0, payload.length, args.port, args.host, () => {
-    if (!args.timeoutMs) {
-      return;
-    }
-    setTimeout(() => socket.close(), kDefaultTimeout);
+    const payload = Buffer.from(`DISCOVER`, "ascii");
+
+    socket.send(payload, 0, payload.length, args.port, args.host, () => {
+      if (!args.timeoutMs) {
+        return;
+      }
+      setTimeout(() => socket.close(), kDefaultTimeout);
+    });
+
+    socket.on("error", (err: any) => {
+      reject(err);
+    });
+
+    socket.on("close", () => {
+      resolve(devices);
+    });
   });
 };

@@ -22,7 +22,6 @@ class Device {
       config.setDevice(this);
 
       const proto = config.toProto();
-      console.log("Configure() with proto", proto);
       this.rpc.configure(proto, (err, res) => {
         if (err) {
           reject(err);

@@ -268,7 +268,11 @@ const main = async () => {
   const argv = cli.parseSync();
 
   if (argv._.includes("discover")) {
-    return discover();
+    const devices = await discover();
+    for (const device of devices) {
+      console.log(`${device.host}:${device.port}   ${device.capability}   ${device.name} (${device.serial})`);
+    }
+    return;
   }
 
   const { uri } = argv;
