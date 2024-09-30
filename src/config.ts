@@ -12,9 +12,9 @@ import StreamOut from "./nodes/stream_out";
 type Connection = [number, number];
 const kNodeTypeObjectMap = {
   [synapse.NodeType.kElectricalBroadband]: ElectricalBroadband,
-  [synapse.NodeType.kElectricalStim]: ElectricalStimulation,
+  [synapse.NodeType.kElectricalStimulation]: ElectricalStimulation,
   [synapse.NodeType.kOpticalBroadband]: OpticalBroadband,
-  [synapse.NodeType.kOpticalStim]: OpticalStimulation,
+  [synapse.NodeType.kOpticalStimulation]: OpticalStimulation,
   [synapse.NodeType.kSpectralFilter]: SpectralFilter,
   [synapse.NodeType.kSpikeDetect]: SpikeDetect,
   [synapse.NodeType.kStreamIn]: StreamIn,

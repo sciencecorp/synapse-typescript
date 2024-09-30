@@ -38,7 +38,7 @@ class StreamOut extends Node {
       return false;
     }
 
-    const host = this.config.useMulticast && this.config.multicastGroup ? this.config.multicastGroup : split[0];
+    const host = this.config.multicastGroup;
     if (!host) {
       console.error(`Invalid bind address: ${host}`);
       return false;

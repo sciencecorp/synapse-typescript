@@ -2,10 +2,10 @@ import { synapse } from "../api/api";
 import Node from "../node";
 
 class ElectricalStimulation extends Node {
-  type = synapse.NodeType.kElectricalStim;
-  config: synapse.IElectricalStimConfig;
+  type = synapse.NodeType.kElectricalStimulation;
+  config: synapse.IElectricalStimulationConfig;
 
-  constructor(config: synapse.IElectricalStimConfig = {}) {
+  constructor(config: synapse.IElectricalStimulationConfig = {}) {
     super();
 
     this.config = config;
@@ -13,17 +13,17 @@ class ElectricalStimulation extends Node {
 
   toProto(): synapse.NodeConfig {
     return super.toProto({
-      electricalStim: this.config,
+      electricalStimulation: this.config,
     });
   }
 
   static fromProto(proto: synapse.INodeConfig): ElectricalStimulation {
-    const { electricalStim } = proto;
-    if (!electricalStim) {
-      throw new Error("Invalid config, missing electricalStim");
+    const { electricalStimulation } = proto;
+    if (!electricalStimulation) {
+      throw new Error("Invalid config, missing electricalStimulation");
     }
 
-    return new ElectricalStimulation(proto.electricalStim);
+    return new ElectricalStimulation(proto.electricalStimulation);
   }
 }
 

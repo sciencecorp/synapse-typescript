@@ -114,7 +114,6 @@ const read = async (device: Device, argv: any) => {
   const nodeStreamOut = new StreamOut(
     {
       multicastGroup,
-      useMulticast: !!multicastGroup,
     },
     onMessage
   );
