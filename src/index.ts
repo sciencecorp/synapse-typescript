@@ -1,6 +1,4 @@
-import Config from "./config";
-import Device from "./device";
-import Node from "./node";
+export { default as Config } from "./config";
+export { default as Device } from "./device";
+export * from "./nodes";
 export { synapse } from "./api/api";
-
-export { Config, Device, Node };
