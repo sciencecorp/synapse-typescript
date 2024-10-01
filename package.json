@@ -21,13 +21,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sciencecorp/synapse-client-typescript.git"
+    "url": "git+https://github.com/sciencecorp/synapse-typescript.git"
   },
   "author": "team@science.xyz",
   "bugs": {
-    "url": "https://github.com/sciencecorp/synapse-client-typescript/issues"
+    "url": "https://github.com/sciencecorp/synapse-typescript/issues"
   },
-  "homepage": "https://github.com/sciencecorp/synapse-client-typescript#readme",
+  "homepage": "https://github.com/sciencecorp/synapse-typescript#readme",
   "devDependencies": {
     "eslint": "^9.5.0",
     "protobufjs-cli": "^1.1.2",
