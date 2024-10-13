@@ -3,11 +3,6 @@ import dgram from "dgram";
 import { synapse } from "../api/api";
 import Node from "../node";
 
-export interface StreamInArgs {
-  dataType: synapse.DataType;
-  shape?: number[];
-}
-
 class StreamIn extends Node {
   type = synapse.NodeType.kStreamIn;
   config: synapse.IStreamInConfig;
