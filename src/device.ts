@@ -42,7 +42,11 @@ class Device {
         if (err) {
           reject(err);
         } else {
-          resolve(res!);
+          if (this._handleStatusResponse(res.status)) {
+            resolve(res!);
+          } else {
+            reject(`Error starting device: (code: ${getName(synapse.StatusCode, res.code)}) ${res.message}`);
+          }
         }
       });
     });
