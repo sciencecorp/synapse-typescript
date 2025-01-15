@@ -5,6 +5,10 @@ import Config from "./config";
 import { create } from "./utils/client";
 import { getName } from "./utils/enum";
 
+export interface CallOptions {
+  deadline?: Date;
+}
+
 class Device {
   rpc: any | null = null;
   channel: Channel | null = null;
@@ -17,12 +21,11 @@ class Device {
     }
   }
 
-  async configure(config: Config): Promise<boolean> {
+  async configure(config: Config, options: CallOptions = {}): Promise<boolean> {
     return new Promise((resolve, reject) => {
       config.setDevice(this);
-
       const proto = config.toProto();
-      this.rpc.configure(proto, (err, res) => {
+      this.rpc.configure(proto, options, (err, res) => {
         if (err) {
           reject(err);
         } else {
@@ -36,9 +39,9 @@ class Device {
     });
   }
 
-  async info(): Promise<synapse.DeviceInfo> {
+  async info(options: CallOptions = {}): Promise<synapse.DeviceInfo> {
     return new Promise((resolve, reject) => {
-      this.rpc.info({}, (err, res) => {
+      this.rpc.info({}, options, (err, res) => {
         if (err) {
           reject(err);
         } else {
@@ -52,9 +55,9 @@ class Device {
     });
   }
 
-  async start(): Promise<boolean> {
+  async start(options: CallOptions = {}): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      this.rpc.start({}, (err, res) => {
+      this.rpc.start({}, options, (err, res) => {
         if (err) {
           reject(err);
         } else {
@@ -68,9 +71,9 @@ class Device {
     });
   }
 
-  async stop(): Promise<boolean> {
+  async stop(options: CallOptions = {}): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      this.rpc.stop({}, (err, res) => {
+      this.rpc.stop({}, options, (err, res) => {
         if (err) {
           reject(err);
         } else {
