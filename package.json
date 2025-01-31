@@ -16,8 +16,7 @@
     "build": "./scripts/build.sh",
     "clean": "rm -rf dist src/api",
     "generate": "./scripts/generate.sh",
-    "lint": "tsc --noEmit && eslint --ext .ts,.tsx .",
-    "postinstall": "pwd > /tmp/debug.log && ls -al >> /tmp/debug.log && npm run dist"
+    "lint": "tsc --noEmit && eslint --ext .ts,.tsx ."
   },
   "repository": {
     "type": "git",
