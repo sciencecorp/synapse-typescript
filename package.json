@@ -17,7 +17,7 @@
     "clean": "rm -rf dist src/api",
     "generate": "./scripts/generate.sh",
     "lint": "tsc --noEmit && eslint --ext .ts,.tsx .",
-    "postinstall": "pwd && git submodule update --init && npm run dist"
+    "postinstall": "pwd && ls -al && git submodule update --init && npm run dist"
   },
   "repository": {
     "type": "git",
