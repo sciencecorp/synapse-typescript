@@ -5,7 +5,7 @@ import { hideBin } from "yargs/helpers";
 import { synapse } from "./api/api";
 import Config from "./config";
 import Device from "./device";
-import ElectricalBroadband from "./nodes/electrical_broadband";
+import ElectricalBroadband from "./nodes/broadband_source";
 import OpticalStimulation from "./nodes/optical_stimulation";
 import StreamIn from "./nodes/stream_in";
 import StreamOut from "./nodes/stream_out";
@@ -107,9 +107,13 @@ const read = async (device: Device, argv: any) => {
   const config = new Config();
   const nodeEphys = new ElectricalBroadband({
     peripheralId: 3,
-    channels: [{ id: 0, referenceId: 0, electrodeId: 1 }],
+    signal: {
+      electrode: {
+        channels: [{ id: 0, referenceId: 0, electrodeId: 1 }],
+      },
+    },
     bitWidth: 12,
-    sampleRate: 16000,
+    sampleRateHz: 16000,
   });
   const nodeStreamOut = new StreamOut(
     {
