@@ -12,7 +12,7 @@ describe("discover", () => {
       send: jest.fn(),
       close: jest.fn(),
     };
-    (dgram.createSocket as jest.Mock).mockReturnValue(mockSocket);
+    (dgram.createSocket as jest.Mock).mockImplementation(() => mockSocket);
   });
 
   afterEach(() => {
