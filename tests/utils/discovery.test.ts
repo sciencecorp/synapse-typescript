@@ -1,9 +1,7 @@
 import dgram from "dgram";
 import { discover } from "../../src/utils/discover";
 
-jest.mock("dgram", () => ({
-  createSocket: jest.fn(),
-}));
+jest.mock("dgram");
 
 describe("discover", () => {
   let mockSocket: any;
@@ -14,7 +12,7 @@ describe("discover", () => {
       send: jest.fn(),
       close: jest.fn(),
     };
-    (dgram.createSocket as jest.Mock).mockImplementation(() => mockSocket);
+    (dgram.createSocket as jest.Mock).mockReturnValue(mockSocket);
   });
 
   afterEach(() => {
