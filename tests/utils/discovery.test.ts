@@ -1,7 +1,9 @@
 import dgram from "dgram";
 import { discover } from "../../src/utils/discover";
 
-jest.mock("dgram");
+jest.mock("dgram", () => ({
+  createSocket: jest.fn(),
+}));
 
 describe("discover", () => {
   let mockSocket: any;
