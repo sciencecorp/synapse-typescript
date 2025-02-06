@@ -17,7 +17,7 @@
     "dist": "npm run generate && npm run build",
     "generate": "./scripts/generate.sh",
     "lint": "tsc --noEmit && eslint --ext .ts,.tsx .",
-    "postinstall": "./scripts/postinstall.sh"
+    "postinstall": "./scripts/postinstall.sh && npm run build"
   },
   "repository": {
     "type": "git",
