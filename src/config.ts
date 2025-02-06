@@ -74,7 +74,7 @@ class Config {
       }
 
       const node = NodeType.fromProto(nodeProto);
-      if (!!nodeProto.id) {
+      if (nodeProto.id) {
         node.id = nodeProto.id;
         config.nodes.push(node);
       } else {

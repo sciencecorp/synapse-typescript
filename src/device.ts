@@ -89,7 +89,7 @@ class Device {
 
   _handleStatusResponse(status: synapse.Status): boolean {
     const { code, sockets } = status;
-    if (code && (code as any) !== synapse.StatusCode.kOk) {
+    if (code && (code as synapse.StatusCode) !== synapse.StatusCode.kOk) {
       return false;
     } else {
       this.sockets = sockets || [];

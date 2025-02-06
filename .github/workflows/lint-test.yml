@@ -1,0 +1,45 @@
+on:
+  workflow_call:
+    inputs:
+      runner:
+        description: "The runner to use"
+        required: true
+        default: "ubuntu-20.04"
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  lint:
+    runs-on: ${{ inputs.runner }}
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+        with:
+          submodules: "true"
+
+      - uses: ./.github/actions/setup-frontend
+
+      - name: Check frontend types
+        run: npm run generate && npm run build
+
+      - name: Check frontend types
+        run: npm run lint
+
+  test:
+    runs-on: ${{ inputs.runner }}
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+        with:
+          submodules: "true"
+
+      - uses: ./.github/actions/setup-frontend
+
+      - name: Check frontend types
+        run: npm run generate && npm run build
+
+      - name: Test
+        run: npm run test
+        shell: bash
