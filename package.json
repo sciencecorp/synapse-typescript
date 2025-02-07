@@ -12,12 +12,12 @@
     "synapse-api"
   ],
   "scripts": {
-    "dist": "npm run generate && npm run build",
     "build": "./scripts/build.sh",
     "clean": "rm -rf dist src/api",
+    "dist": "npm run generate && npm run build",
     "generate": "./scripts/generate.sh",
     "lint": "tsc --noEmit && eslint --ext .ts,.tsx .",
-    "postinstall": "git submodule update --init && npm run dist"
+    "postinstall": "./scripts/postinstall.sh && npm run dist"
   },
   "repository": {
     "type": "git",
