@@ -39,7 +39,7 @@ fi
 
 echo "- Looking up synapse-api ref for synapse-typescript ref $REF_LIB"
 
-REF_API=$(curl -s https://api.github.com/repos/sciencecorp/synapse-typescript/contents/synapse-api?ref=$REF_LIB | grep -o '"sha": *"[^"]*"' | sed 's/"sha": *"\([^"]*\)"/\1/')
+REF_API=$(curl -s "https://api.github.com/repos/sciencecorp/synapse-typescript/contents/synapse-api?ref=$REF_LIB" | grep -o '"sha": *"[^"]*"' | sed 's/"sha": *"\([^"]*\)"/\1/')
 if [ -z "$REF_API" ]; then
     echo " - Failed to get synapse-api version"
     exit 1
@@ -48,22 +48,20 @@ fi
 echo "- Found synapse-api ref $REF_API"
 
 TMP_DIR=$(mktemp -d)
-curl -s -L https://github.com/sciencecorp/synapse-api/archive/${REF_API}.zip -o $TMP_DIR/synapse-api.zip
-if [ $? -ne 0 ]; then
+if ! curl -s -L "https://github.com/sciencecorp/synapse-api/archive/${REF_API}.zip" -o "$TMP_DIR/synapse-api.zip"; then
     echo " - Failed to download synapse-api"
     exit 1
 fi
 
-unzip -q $TMP_DIR/synapse-api.zip -d $TMP_DIR
-if [ $? -ne 0 ] || [ ! -d "$TMP_DIR/synapse-api-${REF_API}" ]; then
+if ! unzip -q "$TMP_DIR/synapse-api.zip" -d "$TMP_DIR"; then
     echo " - Failed to unzip synapse-api"
     exit 1
 fi
 
 mkdir -p synapse-api
-cp -r $TMP_DIR/synapse-api-${REF_API}/* synapse-api/
+cp -r "$TMP_DIR/synapse-api-${REF_API}/"* synapse-api/
 
-rm $TMP_DIR/synapse-api.zip
+rm "$TMP_DIR/synapse-api.zip"
 
 
 if [ ! -f "synapse-api/README.md" ] || [ ! -f "synapse-api/COPYRIGHT" ] || [ ! -d "synapse-api/api" ]; then
