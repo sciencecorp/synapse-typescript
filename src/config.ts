@@ -47,7 +47,7 @@ class Config {
   }
 
   addNode(node: Node): boolean {
-    if (!!node.id) {
+    if (node.id) {
       return false;
     }
     node.id = this._genNodeId();
@@ -74,7 +74,7 @@ class Config {
       }
 
       const node = NodeType.fromProto(nodeProto);
-      if (!!nodeProto.id) {
+      if (nodeProto.id) {
         node.id = nodeProto.id;
         config.nodes.push(node);
       } else {

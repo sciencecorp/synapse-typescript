@@ -1,0 +1,20 @@
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  lint-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        build: [{ runner: "ubuntu-20.04" }]
+    uses: ./.github/workflows/lint-test.yml
+    with:
+      runner: ${{ matrix.build.runner }}
+    secrets: inherit

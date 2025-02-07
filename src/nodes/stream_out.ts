@@ -18,7 +18,7 @@ class StreamOut extends Node {
     this._onMessage = onMessage;
   }
 
-  async start(): Promise<any> {
+  async start(): Promise<boolean> {
     if (this.device === null) {
       return false;
     }
@@ -45,9 +45,9 @@ class StreamOut extends Node {
 
     this._socket = dgram.createSocket("udp4");
 
-    this._socket.on("error", (err: any) => {});
+    this._socket.on("error", () => {});
 
-    this._socket.on("message", (msg: Buffer, rinfo: any) => {
+    this._socket.on("message", (msg: Buffer) => {
       this._onMessage?.(msg);
     });
 
@@ -65,7 +65,7 @@ class StreamOut extends Node {
     return true;
   }
 
-  async stop(): Promise<any> {
+  async stop(): Promise<boolean> {
     if (this._socket) {
       this._socket.close();
     }

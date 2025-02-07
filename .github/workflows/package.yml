@@ -1,0 +1,237 @@
+name: main
+
+on:
+  workflow_call:
+    inputs:
+      nexus-server-version:
+        description: "The Nexus Server version to package"
+        type: string
+      runner:
+        description: "The runner to use"
+        required: true
+        default: "ubuntu-20.04"
+        type: string
+      triplet:
+        description: "The nexus server triplet"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+env:
+  NEXUS_KEYCHAIN_NAME: "nexus-signing"
+  NEXUS_SERVER_DIR: "external/sciencecorp/nexus-server"
+
+jobs:
+  package:
+    runs-on: ${{ inputs.runner }}
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Add SSH keys
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: |
+            ${{ secrets.SCIENCECORP_NEXUS_API_DEPLOY_KEY }}
+            ${{ secrets.SCIENCECORP_SYNAPSE_API_DEPLOY_KEY }}
+            ${{ secrets.SCIENCECORP_SYNAPSE_CLIENT_TYPESCRIPT_DEPLOY_KEY }}
+
+      - name: Check out repository code
+        uses: actions/checkout@v4
+        with:
+          submodules: "true"
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18.13.0"
+          cache: "npm"
+          cache-dependency-path: "./package-lock.json"
+
+      - name: Install dependencies
+        run: |
+          # Newer gcc is more strict, and results in failed zeromq (native addon) build
+          # Set the zeromq ref manually to pull fix
+          # https://github.com/zeromq/libzmq/commit/438d5d88
+          export ZMQ_VERSION=438d5d88392baffa6c2c5e0737d9de19d6686f0d
+          npm ci
+        shell: bash
+
+      # https://github.com/LinusU/node-appdmg/issues/234
+      - name: Set up python (appdmg fix)
+        if: ${{ startsWith(inputs.runner, 'macos') }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+
+      # https://github.com/LinusU/node-appdmg/issues/234
+      - name: Set up appdmg
+        if: ${{ startsWith(inputs.runner, 'macos') }}
+        run: |
+          python3 -m pip install setuptools
+
+          echo "Installing appdmg@0.6.6"
+          npm install appdmg@0.6.6
+
+      - name: Create download folders
+        run: |
+          mkdir -p tmp/
+          mkdir -p ${{ env.NEXUS_SERVER_DIR }}
+
+      - uses: actions/github-script@v7
+        id: download_server_asset
+        with:
+          script: |
+            const fs = require("fs");
+            const { pipeline } = require("stream");
+
+            const { Octokit } = require("@octokit/rest");
+            const octokit = new Octokit({ auth: "${{ secrets.SCIENCECORP_NEXUS_READ_ACCESS_TOKEN }}" });
+
+            const version = "${{ inputs.nexus-server-version }}" || "latest";
+            console.log(`Downloading Nexus Server (${version}) triplet ${{ inputs.triplet }}`);
+
+            let release = null;
+            if (version === "latest") {
+              const { data } = await octokit.repos.getLatestRelease({
+                owner: "sciencecorp",
+                repo: "nexus",
+              });
+              release = data;
+
+            } else {
+              const { data } = await octokit.repos.getReleaseByTag({
+                owner: "sciencecorp",
+                repo: "nexus",
+                tag: version,
+              });
+              release = data;
+            }
+
+            console.log(`Found release ${release.tag_name}`);
+
+            const asset = release.assets.find((asset) =>
+              asset.name.includes("${{ inputs.triplet }}")
+            );
+
+            if (!asset) {
+              throw new Error(`No asset found for triplet ${{ inputs.triplet }} in release assets`, release.assets);
+            }
+
+            console.log(`Downloading asset ${asset?.name}`);
+
+            const { data: buffer } = await octokit.rest.repos.getReleaseAsset({
+              owner: "sciencecorp",
+              repo: "nexus",
+              asset_id: asset.id,
+              headers: {
+                Accept: "application/octet-stream",
+              },
+              request: {
+                parseSuccessResponseBody: false,
+              },
+            });
+
+            console.log(`Acquired stream for ${asset.name}`);
+
+            const tmpDir = "./tmp";
+            if (!fs.existsSync(tmpDir)) {
+              fs.mkdirSync(tmpDir);
+            }
+
+            const filepath = `${tmpDir}/${asset.name}`;
+            fs.writeFileSync(filepath, Buffer.from(buffer));
+
+            console.log(`Downloaded ${asset.name}`);
+
+            return filepath;
+
+      - name: (Debug) List downloaded server artifacts
+        run: ls -al tmp
+        shell: bash
+
+      - name: Unzip Nexus Server to NEXUS_SERVER_DIR
+        run: |
+          unzip -o ${{ steps.download_server_asset.outputs.result }} -d ${{ env.NEXUS_SERVER_DIR }}
+        shell: bash
+
+      - name: (Debug) List unzipped server artifacts
+        run: |
+          ls -al ${{ env.NEXUS_SERVER_DIR }}
+        shell: bash
+
+      - name: Install the Apple certificate and provisioning profile
+        if: ${{ startsWith(inputs.runner, 'macos') }}
+        env:
+          CERT_DEVELOPER_ID_APPLICATION_BASE64: ${{ secrets.NEXUS_APPLE_CERT_DEVELOPER_ID_APPLICATION_BASE64 }}
+          CERT_PASSWORD: ${{ secrets.NEXUS_APPLE_CERT_PASSWORD }}
+          PROVISIONING_PROFILE_BASE64: ${{ secrets.NEXUS_PROVISIONING_PROFILE_BASE64 }}
+          KEYCHAIN_PASSWORD: ${{ secrets.NEXUS_KEYCHAIN_PASSWORD }}
+        run: |
+          # create variables
+          PATH_CERT=$RUNNER_TEMP/cert_developer_id_appliction.p12
+          PATH_PROFILE=$RUNNER_TEMP/nexus.provisionprofile
+          PATH_KEYCHAIN=$RUNNER_TEMP/$NEXUS_KEYCHAIN_NAME.keychain-db
+
+          echo "Saving provisioning profile to $PATH_PROFILE"
+
+          # import certificate and provisioning profile from secrets
+          echo -n "$CERT_DEVELOPER_ID_APPLICATION_BASE64" | base64 --decode -o $PATH_CERT
+          echo -n "$PROVISIONING_PROFILE_BASE64" | base64 --decode -o $PATH_PROFILE
+
+          # create temporary keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $PATH_KEYCHAIN
+          security set-keychain-settings -lut 21600 $PATH_KEYCHAIN
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $PATH_KEYCHAIN
+
+          # import certificate to keychain
+          security import $PATH_CERT -P "$CERT_PASSWORD" -A -t cert -f pkcs12 -k $PATH_KEYCHAIN -T /usr/bin/codesign -T /usr/bin/productbuild;
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $PATH_KEYCHAIN
+          security list-keychain -d user -s $PATH_KEYCHAIN
+
+          # apply provisioning profile
+          echo "Copying provisioning profile to ~/Library/MobileDevice/Provisioning\ Profiles/"
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp $PATH_PROFILE ~/Library/MobileDevice/Provisioning\ Profiles/
+
+          # debug
+          security find-identity -p codesigning -v $PATH_KEYCHAIN
+
+      - name: Package
+        env:
+          NEXUS_APPLE_ID: ${{ secrets.NEXUS_APPLE_ID }}
+          NEXUS_APPLE_PASSWORD: ${{ secrets.NEXUS_APPLE_APP_PASSWORD }}
+          NEXUS_APPLE_TEAM_ID: ${{ secrets.NEXUS_APPLE_TEAM_ID }}
+        run: |
+          export NEXUS_PROFISIONING_PROFILE_PATH=~/Library/MobileDevice/Provisioning\ Profiles/nexus.provisionprofile
+          export NEXUS_KEYCHAIN_PATH=$RUNNER_TEMP/$NEXUS_KEYCHAIN_NAME.keychain-db
+
+          chmod +x external/sciencecorp/nexus-server/dist/behavior/bin/nexus-behavior
+          chmod +x external/sciencecorp/nexus-server/dist/behavior/python/install-wheel.sh
+
+          mkdir -p external/sciencecorp/nexus-server/dist/behavior/lib
+
+          # Newer gcc is more strict, and results in failed zeromq (native addon) build
+          # Set the zeromq ref manually to pull fix
+          # https://github.com/zeromq/libzmq/commit/438d5d88
+          export ZMQ_VERSION=438d5d88392baffa6c2c5e0737d9de19d6686f0d
+          DEBUG=electron* npm run dist
+        shell: bash
+
+      - name: Publish
+        env:
+          NEXUS_APPLE_ID: ${{ secrets.NEXUS_APPLE_ID }}
+          NEXUS_APPLE_PASSWORD: ${{ secrets.NEXUS_APPLE_APP_PASSWORD }}
+          NEXUS_APPLE_TEAM_ID: ${{ secrets.NEXUS_APPLE_TEAM_ID }}
+        run: |
+          DEBUG=* npm run publish
+        shell: bash
+
+      # Not required on GH runners,
+      # but required on self-hosted runners, so included anyway
+      - name: Clean up keychain and provisioning profile
+        if: ${{ always() && runner.os == 'macos-latest-xlarge' }}
+        run: |
+          security delete-keychain $RUNNER_TEMP/$NEXUS_KEYCHAIN_NAME.keychain-db
+          rm ~/Library/MobileDevice/Provisioning\ Profiles/nexus.provisionprofile

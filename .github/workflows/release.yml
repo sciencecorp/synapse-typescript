@@ -1,0 +1,39 @@
+on:
+  push:
+    tags:
+      - "*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  lint-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        build:
+          [
+            { runner: "ubuntu-20.04", features: "", triplet: "x64-linux" },
+            { runner: "macos-latest-xlarge", features: "coreml", triplet: "arm64-osx" },
+          ]
+    uses: ./.github/workflows/lint-test.yml
+    with:
+      runner: ${{ matrix.build.runner }}
+    secrets: inherit
+
+  package:
+    needs: ["lint-test"]
+    strategy:
+      fail-fast: false
+      matrix:
+        build:
+          [
+            { runner: "ubuntu-20.04", features: "", triplet: "x64-linux" },
+            { runner: "macos-latest-xlarge", features: "coreml", triplet: "arm64-osx" },
+          ]
+    uses: ./.github/workflows/package.yml
+    with:
+      runner: ${{ matrix.build.runner }}
+      triplet: ${{ matrix.build.triplet }}
+    secrets: inherit

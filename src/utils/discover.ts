@@ -28,8 +28,7 @@ export const discover = (args = kDefaultDiscoverArgs): Promise<DeviceAdvertiseme
 
     const socket = dgram.createSocket("udp4");
 
-    socket.on("message", (msg: Buffer, rinfo: any) => {
-      const server = `${rinfo.address}:${rinfo.port}`;
+    socket.on("message", (msg: Buffer, rinfo: dgram.RemoteInfo) => {
       const message = msg.toString("ascii");
       const split = message.split(" ");
 
@@ -42,7 +41,7 @@ export const discover = (args = kDefaultDiscoverArgs): Promise<DeviceAdvertiseme
       }
 
       const host = rinfo.address;
-      const [_, serial, capability, portstr, name] = split;
+      const [, serial, capability, portstr, name] = split;
       const port = parseInt(portstr);
       if (isNaN(port)) {
         return;
@@ -71,7 +70,7 @@ export const discover = (args = kDefaultDiscoverArgs): Promise<DeviceAdvertiseme
       setTimeout(() => socket.close(), kDefaultTimeout);
     });
 
-    socket.on("error", (err: any) => {
+    socket.on("error", (err: Error) => {
       reject(err);
     });
 
