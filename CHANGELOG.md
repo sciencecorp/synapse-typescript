@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.11.0](https://github.com/sciencecorp/synapse-typescript/compare/v0.10.0...v0.11.0) (2025-02-07)
+
+
+### Features
+
+* add BroadbandSource, SpikeSource nodes ([#10](https://github.com/sciencecorp/synapse-typescript/issues/10)) ([6175d17](https://github.com/sciencecorp/synapse-typescript/commit/6175d1726784c194a154e1a9154bd6841b7073f7))
+* update discovery implementation ([#9](https://github.com/sciencecorp/synapse-typescript/issues/9)) ([220e472](https://github.com/sciencecorp/synapse-typescript/commit/220e47268382f7ac34a70848d000f8f301d8f342))
+
+
+### Bug Fixes
+
+* fix installation of package (postinstall hook) by falling back to synapse-api zip download if submodule not available ([#11](https://github.com/sciencecorp/synapse-typescript/issues/11)) ([f06f4d1](https://github.com/sciencecorp/synapse-typescript/commit/f06f4d170800f36d85aa80c3e47bdfbbd7d69551))
+
 ## [0.10.0](https://github.com/sciencecorp/synapse-typescript/compare/v0.9.0...v0.10.0) (2025-01-15)
 
 
