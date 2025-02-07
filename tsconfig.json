@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     "allowJs": true,
-    "baseUrl": ".",
     "declaration": true,
     "declarationMap": true,
     "esModuleInterop": true,
@@ -14,9 +13,8 @@
     "sourceMap": true,
     "resolveJsonModule": true,
     "target": "ES6",
-    "paths": {
-      "*": ["node_modules/*", "src/*", "tests/*"]
-    }
+    "rootDir": "src"
   },
-  "include": ["src/**/*", "tests/**/*"]
+  "include": ["src/**/*"],
+  "exclude": ["tests/**/*"]
 }
