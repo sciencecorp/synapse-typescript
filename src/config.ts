@@ -47,7 +47,7 @@ class Config {
   }
 
   addNode(node: Node): boolean {
-    if (!!node.id) {
+    if (node.id) {
       return false;
     }
     node.id = this._genNodeId();
