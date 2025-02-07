@@ -39,7 +39,7 @@ class Config {
   }
 
   connect(fromNode: Node, toNode: Node): boolean {
-    if (fromNode.id === null || toNode.id === null) {
+    if (!fromNode.id || !toNode.id) {
       return false;
     }
     this.connections.push([fromNode.id, toNode.id]);
