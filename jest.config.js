@@ -6,4 +6,5 @@ module.exports = {
   },
   roots: ["<rootDir>", "<rootDir>/tests"],
   modulePaths: ["<rootDir>", "<rootDir>/src", "<rootDir>/generated"],
+  setupFilesAfterEnv: ["<rootDir>/tests/setupTests.ts"],
 };

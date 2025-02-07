@@ -1,21 +1,21 @@
 import dgram from "dgram";
 import { discover } from "../../src/utils/discover";
 
-jest.mock("dgram");
+const mockSocket = {
+  on: jest.fn(),
+  send: jest.fn(),
+  close: jest.fn(),
+};
+
+jest.mock("dgram", () => ({
+  __esModule: true,
+  default: {
+    createSocket: jest.fn(() => mockSocket),
+  },
+}));
 
 describe("discover", () => {
-  let mockSocket: any;
-
   beforeEach(() => {
-    mockSocket = {
-      on: jest.fn(),
-      send: jest.fn(),
-      close: jest.fn(),
-    };
-    (dgram.createSocket as jest.Mock).mockReturnValue(mockSocket);
-  });
-
-  afterEach(() => {
     jest.clearAllMocks();
   });
 
