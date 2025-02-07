@@ -25,7 +25,7 @@ export const discover = (timeoutMs = 1000): Promise<DeviceInfo[]> => {
         return;
       }
 
-      const [_, serial, capability, portStr, name] = split;
+      const [, serial, capability, portStr, name] = split;
       const port = parseInt(portStr);
       if (isNaN(port)) {
         return;
