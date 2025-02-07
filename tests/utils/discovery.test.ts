@@ -1,11 +1,34 @@
 import dgram from "dgram";
 import { discover } from "../../src/utils/discover";
 
-const mockSocket = {
-  on: jest.fn(),
-  send: jest.fn(),
-  close: jest.fn(),
-};
+class MockSocket {
+  private handlers: { [event: string]: Function[] } = {};
+
+  on = jest.fn().mockImplementation((event: string, callback: Function) => {
+    if (!this.handlers[event]) {
+      this.handlers[event] = [];
+    }
+    this.handlers[event].push(callback);
+  });
+
+  send = jest.fn();
+
+  close = jest.fn().mockImplementation(() => {
+    if (this.handlers["close"]) {
+      this.handlers["close"].forEach((cb) => cb());
+    }
+  });
+
+  bind = jest.fn();
+
+  emit(event: string, ...args: any[]) {
+    if (this.handlers[event]) {
+      this.handlers[event].forEach((cb) => cb(...args));
+    }
+  }
+}
+
+const mockSocket = new MockSocket();
 
 jest.mock("dgram", () => ({
   __esModule: true,
@@ -30,20 +53,19 @@ describe("discover", () => {
       },
     ];
 
-    // Simulate device response
     mockSocket.on.mockImplementation((event, callback) => {
       if (event === "message") {
         const message = Buffer.from("ID ABC123 SYN1.2.345 6470 test-device-123", "ascii");
-        callback(message, { address: "192.168.1.100" });
+        setTimeout(() => callback(message, { address: "192.168.1.100" }), 10);
       } else if (event === "close") {
-        setTimeout(() => callback(), 100);
+        setTimeout(() => callback(), 500);
       }
     });
 
-    const devices = await discover();
+    const devices = await discover(500);
 
-    expect(dgram.createSocket).toHaveBeenCalledWith("udp4");
-    expect(mockSocket.send).toHaveBeenCalled();
+    expect(dgram.createSocket).toHaveBeenCalledWith({ type: "udp4", reuseAddr: true });
+    expect(mockSocket.bind).toHaveBeenCalledWith(6470);
     expect(devices).toEqual(mockDevices);
   });
 
