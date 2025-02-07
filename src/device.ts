@@ -87,7 +87,7 @@ class Device {
     });
   }
 
-  _handleStatusResponse(status: synapse.Status): boolean {
+  _handleStatusResponse(status: synapse.IStatus): boolean {
     const { code, sockets } = status;
     if (code && (code as synapse.StatusCode) !== synapse.StatusCode.kOk) {
       return false;

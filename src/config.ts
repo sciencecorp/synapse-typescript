@@ -1,19 +1,19 @@
 import Node from "./node";
 import { synapse } from "./api/api";
-import ElectricalBroadband from "./nodes/electrical_broadband";
+import BroadbandSource from "./nodes/broadband_source";
 import ElectricalStimulation from "./nodes/electrical_stimulation";
-import OpticalBroadband from "./nodes/optical_broadband";
 import OpticalStimulation from "./nodes/optical_stimulation";
 import SpectralFilter from "./nodes/spectral_filter";
 import SpikeDetect from "./nodes/spike_detect";
+import SpikeSource from "./nodes/spike_source";
 import StreamIn from "./nodes/stream_in";
 import StreamOut from "./nodes/stream_out";
 
 type Connection = [number, number];
 const kNodeTypeObjectMap = {
-  [synapse.NodeType.kElectricalBroadband]: ElectricalBroadband,
+  [synapse.NodeType.kBroadbandSource]: BroadbandSource,
   [synapse.NodeType.kElectricalStimulation]: ElectricalStimulation,
-  [synapse.NodeType.kOpticalBroadband]: OpticalBroadband,
+  [synapse.NodeType.kSpikeSource]: SpikeSource,
   [synapse.NodeType.kOpticalStimulation]: OpticalStimulation,
   [synapse.NodeType.kSpectralFilter]: SpectralFilter,
   [synapse.NodeType.kSpikeDetect]: SpikeDetect,
@@ -39,18 +39,27 @@ class Config {
   }
 
   connect(fromNode: Node, toNode: Node): boolean {
-    if (fromNode.id === null || toNode.id === null) {
+    if (!fromNode.id || !toNode.id) {
       return false;
     }
     this.connections.push([fromNode.id, toNode.id]);
     return true;
   }
 
-  addNode(node: Node): boolean {
+  addNode(node: Node, id?: number): boolean {
     if (node.id) {
       return false;
     }
-    node.id = this._genNodeId();
+
+    if (id === undefined) {
+      id = this._genNodeId();
+    }
+
+    if (this.nodes.find((n) => n.id === id)) {
+      return false;
+    }
+
+    node.id = id;
     this.nodes.push(node);
     return true;
   }
