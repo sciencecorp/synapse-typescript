@@ -67,7 +67,7 @@ describe("discover", () => {
     expect(dgram.createSocket).toHaveBeenCalledWith({ type: "udp4", reuseAddr: true });
     expect(mockSocket.bind).toHaveBeenCalledWith(6470);
     expect(devices).toEqual(mockDevices);
-  });
+  }, 600);
 
   it("should handle invalid messages", async () => {
     mockSocket.on.mockImplementation((event, callback) => {
@@ -80,9 +80,9 @@ describe("discover", () => {
       }
     });
 
-    const devices = await discover();
+    const devices = await discover(500);
     expect(devices).toEqual([]);
-  });
+  }, 600);
 
   it("should handle socket errors", async () => {
     const error = new Error("Socket error");
@@ -93,6 +93,6 @@ describe("discover", () => {
       }
     });
 
-    await expect(discover()).rejects.toThrow("Socket error");
-  });
+    await expect(discover(500)).rejects.toThrow("Socket error");
+  }, 600);
 });
