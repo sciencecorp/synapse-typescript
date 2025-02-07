@@ -2,9 +2,9 @@ import dgram from "dgram";
 import { discover } from "../../src/utils/discover";
 
 class MockSocket {
-  private handlers: { [event: string]: Function[] } = {};
+  private handlers: { [event: string]: any[] } = {};
 
-  on = jest.fn().mockImplementation((event: string, callback: Function) => {
+  on = jest.fn().mockImplementation((event: string, callback: any) => {
     if (!this.handlers[event]) {
       this.handlers[event] = [];
     }
