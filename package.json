@@ -16,8 +16,9 @@
     "clean": "rm -rf dist src/api",
     "dist": "npm run generate && npm run build",
     "generate": "./scripts/generate.sh",
-    "lint": "tsc --noEmit && eslint --ext .ts,.tsx .",
-    "postinstall": "./scripts/postinstall.sh && npm run dist"
+    "lint": "tsc --noEmit && eslint .",
+    "postinstall": "./scripts/postinstall.sh && npm run dist",
+    "test": "tsc --noEmit && jest"
   },
   "repository": {
     "type": "git",
@@ -28,8 +29,19 @@
     "url": "https://github.com/sciencecorp/synapse-typescript/issues"
   },
   "homepage": "https://github.com/sciencecorp/synapse-typescript#readme",
+  "engines": {
+    "node": ">=18"
+  },
   "devDependencies": {
+    "@eslint/compat": "^1.2.6",
+    "@types/jest": "^29.5.14",
+    "@typescript-eslint/eslint-plugin": "^8.23.0",
+    "@typescript-eslint/parser": "^8.23.0",
     "eslint": "^9.5.0",
+    "eslint-import-resolver-typescript": "^3.7.0",
+    "eslint-plugin-import": "^2.31.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5",
     "typescript": "^5.5.2"
   },
   "dependencies": {

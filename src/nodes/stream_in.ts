@@ -44,7 +44,7 @@ class StreamIn extends Node {
 
     try {
       this._socket.send(data, port, host);
-    } catch (e) {
+    } catch {
       return false;
     }
 
