@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.11.1](https://github.com/sciencecorp/synapse-typescript/compare/v0.11.0...v0.11.1) (2025-02-11)
+
+
+### Bug Fixes
+
+* fix issue where Info() would return error status on successful call with device error status ([#14](https://github.com/sciencecorp/synapse-typescript/issues/14)) ([4e9fe47](https://github.com/sciencecorp/synapse-typescript/commit/4e9fe471c19906652e9931dc34397f9c4df805b0))
+
 ## [0.11.0](https://github.com/sciencecorp/synapse-typescript/compare/v0.10.0...v0.11.0) (2025-02-07)
 
 
