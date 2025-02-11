@@ -43,3 +43,15 @@ jobs:
       - name: Test
         run: npm run test
         shell: bash
+
+  test-install:
+    runs-on: ${{ inputs.runner }}
+    steps:
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18.13.0"
+
+      - name: Test Installation
+        run: npm install git://github.com/sciencecorp/synapse-typescript.git#${{ github.sha }}
+        shell: bash
