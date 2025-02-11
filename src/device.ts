@@ -45,11 +45,9 @@ class Device {
         if (err) {
           reject(err);
         } else {
-          if (this._handleStatusResponse(res.status)) {
-            resolve(res!);
-          } else {
-            reject(`Error starting device: (code: ${getName(synapse.StatusCode, res.code)}) ${res.message}`);
-          }
+          const { sockets } = res.status;
+          this.sockets = sockets || [];
+          resolve(res!);
         }
       });
     });
