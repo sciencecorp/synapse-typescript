@@ -39,8 +39,16 @@ fi
 
 echo "- Looking up synapse-api ref for synapse-typescript ref $REF_LIB"
 
+CURL_OPTS=()
+CURL_OPTS+=(-H "Accept: application/vnd.github+json")
+CURL_OPTS+=(-H "X-GitHub-Api-Version: 2022-11-28")
+if [ -n "$SCIENCE_CORPORATION_SYNAPSE_TOKEN" ]; then
+    echo " - Using GitHub token for authentication"
+    CURL_OPTS+=(-H "Authorization: Bearer $SCIENCE_CORPORATION_SYNAPSE_TOKEN")
+fi
+
 echo " - Fetching synapse-api submodule info..."
-CURL_RESULT=$(curl -s "https://api.github.com/repos/sciencecorp/synapse-typescript/contents/synapse-api?ref=$REF_LIB")
+CURL_RESULT=$(curl -s "${CURL_OPTS[@]}" "https://api.github.com/repos/sciencecorp/synapse-typescript/contents/synapse-api?ref=$REF_LIB")
 if [ -z "$CURL_RESULT" ]; then
     echo "   - Failed to fetch from GitHub API"
     exit 1
