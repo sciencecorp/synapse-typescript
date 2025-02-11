@@ -39,13 +39,29 @@ fi
 
 echo "- Looking up synapse-api ref for synapse-typescript ref $REF_LIB"
 
-REF_API=$(curl -s "https://api.github.com/repos/sciencecorp/synapse-typescript/contents/synapse-api?ref=$REF_LIB" | grep -o '"sha": *"[^"]*"' | sed 's/"sha": *"\([^"]*\)"/\1/')
-if [ -z "$REF_API" ]; then
-    echo " - Failed to get synapse-api version"
+echo " - Fetching synapse-api submodule info..."
+CURL_RESULT=$(curl -s "https://api.github.com/repos/sciencecorp/synapse-typescript/contents/synapse-api?ref=$REF_LIB")
+if [ -z "$CURL_RESULT" ]; then
+    echo "   - Failed to fetch from GitHub API"
     exit 1
 fi
 
-echo "- Found synapse-api ref $REF_API"
+echo "   - Parsing SHA from response..."
+GREP_RESULT=$(echo "$CURL_RESULT" | grep -o '"sha":\s*"[^"]*"')
+if [ -z "$GREP_RESULT" ]; then
+    echo "   - Failed to find SHA in API response"
+    echo "   - API response: $CURL_RESULT"
+    exit 1
+fi
+
+REF_API=$(echo "${GREP_RESULT#*:}" | tr -d '[:space:]"')
+if [ -z "$REF_API" ]; then
+    echo "   - Failed to parse SHA from API response"
+    echo "   - API response: $CURL_RESULT"
+    exit 1
+fi
+
+echo "- Found synapse-api ref \"$REF_API\""
 
 TMP_DIR=$(mktemp -d)
 if ! curl -s -L "https://github.com/sciencecorp/synapse-api/archive/${REF_API}.zip" -o "$TMP_DIR/synapse-api.zip"; then
@@ -68,4 +84,4 @@ if [ ! -f "synapse-api/README.md" ] || [ ! -f "synapse-api/COPYRIGHT" ] || [ ! -
     echo " - Failed to download synapse-api - missing required files"
     exit 1
 fi
-echo " - Successfully downloaded synapse-api ref $REF_API"
+echo " - Successfully downloaded synapse-api ref \"$REF_API\""
