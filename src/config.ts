@@ -8,6 +8,7 @@ import SpikeDetect from "./nodes/spike_detect";
 import SpikeSource from "./nodes/spike_source";
 import StreamIn from "./nodes/stream_in";
 import StreamOut from "./nodes/stream_out";
+import { Status, StatusCode } from "./utils/status";
 
 type Connection = [number, number];
 const kNodeTypeObjectMap = {
@@ -29,26 +30,27 @@ class Config {
     return this.nodes.length + 1;
   }
 
-  add(nodes: Node[]) {
+  add(nodes: Node[]): Status {
     for (const node of nodes) {
-      if (!this.addNode(node)) {
-        return false;
+      const status = this.addNode(node);
+      if (!status.ok()) {
+        return status;
       }
     }
-    return true;
+    return new Status();
   }
 
-  connect(fromNode: Node, toNode: Node): boolean {
+  connect(fromNode: Node, toNode: Node): Status {
     if (!fromNode.id || !toNode.id) {
-      return false;
+      return new Status(StatusCode.INVALID_ARGUMENT, "source and destination nodes must have ids");
     }
     this.connections.push([fromNode.id, toNode.id]);
-    return true;
+    return new Status();
   }
 
-  addNode(node: Node, id?: number): boolean {
+  addNode(node: Node, id?: number): Status {
     if (node.id) {
-      return false;
+      return new Status(StatusCode.INVALID_ARGUMENT, "node must not have an id");
     }
 
     if (id === undefined) {
@@ -56,19 +58,19 @@ class Config {
     }
 
     if (this.nodes.find((n) => n.id === id)) {
-      return false;
+      return new Status(StatusCode.INVALID_ARGUMENT, "node id must be unique");
     }
 
     node.id = id;
     this.nodes.push(node);
-    return true;
+    return new Status();
   }
 
-  setDevice(device): boolean {
+  setDevice(device): Status {
     for (const node of this.nodes) {
       node.device = device;
     }
-    return true;
+    return new Status();
   }
 
   static fromProto(proto: synapse.IDeviceConfiguration): Config {

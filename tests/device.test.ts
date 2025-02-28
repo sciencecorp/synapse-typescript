@@ -2,6 +2,7 @@ import { synapse } from "../src/api/api";
 import Device from "../src/device";
 import Config from "../src/config";
 import BroadbandSource from "../src/nodes/broadband_source";
+import { StatusCode } from "../src/utils/status";
 
 describe("Device", () => {
   let device: Device;
@@ -32,7 +33,8 @@ describe("Device", () => {
         callback(null, { code: synapse.StatusCode.kOk });
       });
 
-      await expect(device.configure(config)).resolves.toBe(true);
+      const status = await device.configure(config);
+      expect(status.ok()).toBe(true);
       expect(device.rpc.configure).toHaveBeenCalled();
       expect(node.device).toBe(device);
     });
@@ -59,8 +61,9 @@ describe("Device", () => {
         callback(null, mockInfo);
       });
 
-      const info = await device.info();
-      expect(info).toEqual(mockInfo);
+      const { status, response } = await device.info();
+      expect(status.ok()).toBe(true);
+      expect(response).toEqual(mockInfo);
     });
 
     it("should reject on info error", async () => {
@@ -78,7 +81,8 @@ describe("Device", () => {
         callback(null, { code: synapse.StatusCode.kOk });
       });
 
-      await expect(device.start()).resolves.toBe(true);
+      const status = await device.start();
+      expect(status.ok()).toBe(true);
     });
 
     it("should stop device", async () => {
@@ -86,29 +90,34 @@ describe("Device", () => {
         callback(null, { code: synapse.StatusCode.kOk });
       });
 
-      await expect(device.stop()).resolves.toBe(true);
+      const status = await device.stop();
+      expect(status.ok()).toBe(true);
     });
   });
 
   describe("_handleStatusResponse", () => {
     it("should handle successful status", () => {
-      const status: synapse.IStatus = {
+      const deviceStatus: synapse.IStatus = {
         code: synapse.StatusCode.kOk,
         sockets: [],
         message: "",
         state: synapse.DeviceState.kInitializing,
       };
-      expect(device._handleStatusResponse(status)).toBe(true);
+      const status = device._handleStatusResponse(deviceStatus);
+      expect(status.ok()).toBe(true);
+      expect(status.code).toBe(StatusCode.OK);
       expect(device.sockets).toEqual([]);
     });
 
     it("should handle error status", () => {
-      const status: synapse.IStatus = {
+      const deviceStatus: synapse.IStatus = {
         code: synapse.StatusCode.kUndefinedError,
         message: "some error",
         state: synapse.DeviceState.kInitializing,
       };
-      expect(device._handleStatusResponse(status)).toBe(false);
+      const status = device._handleStatusResponse(deviceStatus);
+      expect(status.ok()).toBe(false);
+      expect(status.code).toBe(StatusCode.UNKNOWN);
     });
   });
 });

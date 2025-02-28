@@ -48,8 +48,13 @@ const cli = yargs(hideBin(process.argv))
 const info = async (device: Device) => {
   console.log("Info()");
 
-  const info = await device.info();
-  const { serial, name, status, synapseVersion, firmwareVersion, peripherals, configuration } = info;
+  const { status: s, response } = await device.info();
+  if (!s.ok()) {
+    console.error(s.message);
+    return false;
+  }
+
+  const { serial, name, status, synapseVersion, firmwareVersion, peripherals, configuration } = response;
 
   console.log(` - serial:                         ${serial}`);
   console.log(` - name:                           ${name}`);
@@ -89,7 +94,7 @@ const read = async (device: Device, argv: any) => {
   console.log("Reading from device's StreamOut node...");
 
   const { multicastGroup, output } = argv;
-  let ok = true;
+  let status = null;
   let stream = null;
   if (output) {
     console.log(`Writing to file: ${output}`);
@@ -122,26 +127,24 @@ const read = async (device: Device, argv: any) => {
     onMessage
   );
 
-  ok = config.add([nodeEphys, nodeStreamOut]);
-  ok = config.connect(nodeEphys, nodeStreamOut);
-  if (!ok) {
-    console.error("Failed to connect nodes");
+  status = config.add([nodeEphys, nodeStreamOut]);
+  status = config.connect(nodeEphys, nodeStreamOut);
+  if (!status.ok()) {
+    console.error("failed to connect nodes: ", status.message);
     return;
   }
 
   console.log("Configuring device...");
-  try {
-    ok = await device.configure(config);
-  } catch (e) {
-    console.error(e);
+  status = await device.configure(config);
+  if (!status.ok()) {
+    console.error("failed to configure device: ", status.message);
     return;
   }
 
   console.log("Starting device...");
-  try {
-    ok = await device.start();
-  } catch (e) {
-    console.error(e);
+  status = await device.start();
+  if (!status.ok()) {
+    console.error("failed to start device: ", status.message);
     return;
   }
 
@@ -168,7 +171,7 @@ const write = async (device: Device, argv: any) => {
   }
 
   console.log("Writing to device's StreamOut node...");
-  let ok = true;
+  let status = null;
 
   const config = new Config();
   const nodeStreamIn = new StreamIn({
@@ -176,26 +179,29 @@ const write = async (device: Device, argv: any) => {
   });
   const nodeOptical = new OpticalStimulation();
 
-  ok = config.add([nodeStreamIn, nodeOptical]);
-  ok = config.connect(nodeStreamIn, nodeOptical);
-  if (!ok) {
-    console.error("Failed to connect nodes");
+  status = config.add([nodeStreamIn, nodeOptical]);
+  if (!status.ok()) {
+    console.error("Failed to add nodes: ", status.message);
+    return;
+  }
+
+  status = config.connect(nodeStreamIn, nodeOptical);
+  if (!status.ok()) {
+    console.error("Failed to connect nodes: ", status.message);
     return;
   }
 
   console.log("Configuring device...");
-  try {
-    ok = await device.configure(config);
-  } catch (e) {
-    console.error(e);
+  status = await device.configure(config);
+  if (!status.ok()) {
+    console.error("Failed to configure device: ", status.message);
     return;
   }
 
   console.log("Starting device...");
-  try {
-    ok = await device.start();
-  } catch (e) {
-    console.error(e);
+  status = await device.start();
+  if (!status.ok()) {
+    console.error("Failed to start device: ", status.message);
     return;
   }
 
@@ -288,12 +294,7 @@ const main = async () => {
   console.log(`Connecting to device @ ${uri}`);
   const device = new Device(uri as string);
 
-  try {
-    await info(device);
-  } catch (e) {
-    console.error(e);
-    return;
-  }
+  await info(device);
 
   if (argv._.includes("read")) {
     return read(device, argv);
