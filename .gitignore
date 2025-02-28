@@ -1,5 +1,6 @@
 # Generated protobuf code
 src/api/
+src/api-science-device/
 bin/
 proto/*
 

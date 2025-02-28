@@ -19,11 +19,12 @@
     "dist",
     "scripts",
     "src",
-    "synapse-api"
+    "synapse-api",
+    "science-device-api"
   ],
   "scripts": {
     "build": "./scripts/build.sh",
-    "clean": "rm -rf dist src/api",
+    "clean": "rm -rf dist src/api src/api-science-device",
     "dist": "npm run generate && npm run build",
     "generate": "./scripts/generate.sh",
     "lint": "tsc --noEmit && eslint .",
