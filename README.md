@@ -27,7 +27,7 @@ console.log("Device info: ", info);
 
 const streamOut = new StreamOut(
   {
-    multicastGroup: "239.0.0.1",
+    multicastGroup: "224.0.0.1",
   },
   (msg: Buffer) => {
     console.log("StreamOut | recv: ", msg);
