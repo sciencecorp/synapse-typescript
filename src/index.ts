@@ -1,5 +1,6 @@
 export { default as Config } from "./config";
 export { default as Device } from "./device";
+export { default as DeviceManager } from "./utils/device-management";
 export * from "./nodes";
 export { IStatus, Status, StatusCode } from "./utils/status";
 
