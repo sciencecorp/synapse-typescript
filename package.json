@@ -24,7 +24,7 @@
     "type": "git",
     "url": "git+https://github.com/sciencecorp/synapse-typescript.git"
   },
-  "author": "team@science.xyz",
+  "author": "Science Corporation",
   "bugs": {
     "url": "https://github.com/sciencecorp/synapse-typescript/issues"
   },
