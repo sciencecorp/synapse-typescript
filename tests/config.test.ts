@@ -13,14 +13,16 @@ describe("Config", () => {
   describe("addNode", () => {
     it("should add a node with auto-generated id", () => {
       const node = new BroadbandSource();
-      expect(config.addNode(node)).toBe(true);
+      const status = config.addNode(node);
+      expect(status.ok()).toBe(true);
       expect(node.id).toBe(1);
       expect(config.nodes).toContain(node);
     });
 
     it("should add a node with specified id", () => {
       const node = new BroadbandSource();
-      expect(config.addNode(node, 5)).toBe(true);
+      const status = config.addNode(node, 5);
+      expect(status.ok()).toBe(true);
       expect(node.id).toBe(5);
       expect(config.nodes).toContain(node);
     });
@@ -28,15 +30,20 @@ describe("Config", () => {
     it("should reject node that already has an id", () => {
       const node = new BroadbandSource();
       node.id = 1;
-      expect(config.addNode(node)).toBe(false);
+      const status = config.addNode(node);
+      expect(status.ok()).toBe(false);
       expect(config.nodes).not.toContain(node);
     });
 
     it("should reject duplicate node ids", () => {
       const node1 = new BroadbandSource();
       const node2 = new BroadbandSource();
-      config.addNode(node1, 1);
-      expect(config.addNode(node2, 1)).toBe(false);
+
+      let status = config.addNode(node1, 1);
+      expect(status.ok()).toBe(true);
+
+      status = config.addNode(node2, 1);
+      expect(status.ok()).toBe(false);
     });
   });
 
@@ -44,17 +51,23 @@ describe("Config", () => {
     it("should connect two nodes", () => {
       const node1 = new BroadbandSource();
       const node2 = new SpikeDetect();
-      config.addNode(node1);
-      config.addNode(node2);
 
-      expect(config.connect(node1, node2)).toBe(true);
+      let status = config.addNode(node1);
+      expect(status.ok()).toBe(true);
+
+      status = config.addNode(node2);
+      expect(status.ok()).toBe(true);
+
+      status = config.connect(node1, node2);
+      expect(status.ok()).toBe(true);
       expect(config.connections).toContainEqual([node1.id, node2.id]);
     });
 
     it("should reject connection if nodes don't have ids", () => {
       const node1 = new BroadbandSource();
       const node2 = new SpikeDetect();
-      expect(config.connect(node1, node2)).toBe(false);
+      const status = config.connect(node1, node2);
+      expect(status.ok()).toBe(false);
       expect(config.connections).toHaveLength(0);
     });
   });
@@ -62,7 +75,8 @@ describe("Config", () => {
   describe("add", () => {
     it("should add multiple nodes", () => {
       const nodes = [new BroadbandSource(), new SpikeDetect()];
-      expect(config.add(nodes)).toBe(true);
+      const status = config.add(nodes);
+      expect(status.ok()).toBe(true);
       expect(config.nodes).toHaveLength(2);
       expect(nodes[0].id).toBe(1);
       expect(nodes[1].id).toBe(2);
@@ -71,7 +85,8 @@ describe("Config", () => {
     it("should fail if any node already has an id", () => {
       const nodes = [new BroadbandSource(), new SpikeDetect()];
       nodes[1].id = 5;
-      expect(config.add(nodes)).toBe(false);
+      const status = config.add(nodes);
+      expect(status.ok()).toBe(false);
       expect(config.nodes).toHaveLength(1);
     });
   });
@@ -172,7 +187,8 @@ describe("Config", () => {
       config.add([node1, node2]);
 
       const mockDevice = { id: "test-device" };
-      expect(config.setDevice(mockDevice)).toBe(true);
+      const status = config.setDevice(mockDevice);
+      expect(status.ok()).toBe(true);
 
       expect(node1.device).toBe(mockDevice);
       expect(node2.device).toBe(mockDevice);

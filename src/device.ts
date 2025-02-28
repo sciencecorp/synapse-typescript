@@ -1,13 +1,12 @@
-import { Channel, credentials } from "@grpc/grpc-js";
+import { Channel, credentials, ServiceError } from "@grpc/grpc-js";
 
+import protos from "./api/proto.json";
 import { synapse } from "./api/api";
 import Config from "./config";
-import { create } from "./utils/client";
-import { getName } from "./utils/enum";
+import { CallOptions, create } from "./utils/client";
+import { fromDeviceStatus, Status } from "./utils/status";
 
-export interface CallOptions {
-  deadline?: Date;
-}
+const kSynapseService = "synapse.SynapseDevice";
 
 class Device {
   rpc: any | null = null;
@@ -15,83 +14,89 @@ class Device {
   sockets: synapse.INodeSocket[] = [];
 
   constructor(public uri: string) {
-    this.rpc = create(uri, credentials.createInsecure());
-    if (!this.rpc) {
-      throw new Error(`Failed to create client for ${uri}`);
+    const { status, client } = create(protos, kSynapseService)(uri, credentials.createInsecure());
+    if (!status.ok() || !client) {
+      throw new Error(`Failed to create client for ${uri}: ${status.message}`);
     }
+    this.rpc = client;
   }
 
-  async configure(config: Config, options: CallOptions = {}): Promise<boolean> {
+  async configure(config: Config, options: CallOptions = {}): Promise<Status> {
     return new Promise((resolve, reject) => {
       config.setDevice(this);
       const proto = config.toProto();
-      this.rpc.configure(proto, options, (err, res) => {
+      this.rpc.configure(proto, options, (err: ServiceError, res) => {
         if (err) {
           reject(err);
         } else {
-          if (this._handleStatusResponse(res!)) {
-            resolve(true);
+          const status = this._handleStatusResponse(res!);
+          if (status.ok()) {
+            resolve(status);
           } else {
-            reject(`Error configuring device: (code: ${getName(synapse.StatusCode, res.code)}) ${res.message}`);
+            reject(new Status(status.code, `failed to configure device: ${status.message}`));
           }
         }
       });
     });
   }
 
-  async info(options: CallOptions = {}): Promise<synapse.DeviceInfo> {
+  async info(options: CallOptions = {}): Promise<{ status: Status; response?: synapse.DeviceInfo }> {
     return new Promise((resolve, reject) => {
-      this.rpc.info({}, options, (err, res) => {
+      this.rpc.info({}, options, (err: ServiceError, res: synapse.DeviceInfo) => {
         if (err) {
           reject(err);
+        } else if (!res) {
+          reject(new Status(err.code, "failed to get device info: " + err.message));
         } else {
           const { sockets } = res.status;
           this.sockets = sockets || [];
-          resolve(res!);
+          resolve({ status: new Status(), response: res });
         }
       });
     });
   }
 
-  async start(options: CallOptions = {}): Promise<boolean> {
+  async start(options: CallOptions = {}): Promise<Status> {
     return new Promise((resolve, reject) => {
-      this.rpc.start({}, options, (err, res) => {
+      this.rpc.start({}, options, (err: ServiceError, res: synapse.IStatus) => {
         if (err) {
           reject(err);
         } else {
-          if (this._handleStatusResponse(res!)) {
-            resolve(true);
+          const status = this._handleStatusResponse(res!);
+          if (status.ok()) {
+            resolve(status);
           } else {
-            reject(`Error starting device: (code: ${getName(synapse.StatusCode, res.code)}) ${res.message}`);
+            reject(new Status(status.code, `failed to start device: ${status.message}`));
           }
         }
       });
     });
   }
 
-  async stop(options: CallOptions = {}): Promise<boolean> {
+  async stop(options: CallOptions = {}): Promise<Status> {
     return new Promise((resolve, reject) => {
-      this.rpc.stop({}, options, (err, res) => {
+      this.rpc.stop({}, options, (err: ServiceError, res: synapse.IStatus) => {
         if (err) {
           reject(err);
         } else {
-          if (this._handleStatusResponse(res!)) {
-            resolve(true);
+          const status = this._handleStatusResponse(res!);
+          if (status.ok()) {
+            resolve(status);
           } else {
-            reject(`Error stopping device: (code: ${getName(synapse.StatusCode, res.code)}) ${res.message}`);
+            reject(new Status(status.code, `failed to stop device: ${status.message}`));
           }
         }
       });
     });
   }
 
-  _handleStatusResponse(status: synapse.IStatus): boolean {
-    const { code, sockets } = status;
-    if (code && (code as synapse.StatusCode) !== synapse.StatusCode.kOk) {
-      return false;
+  _handleStatusResponse(status: synapse.IStatus): Status {
+    const { code, message, sockets } = status;
+    if (code !== synapse.StatusCode.kOk) {
+      return fromDeviceStatus({ code, message });
     } else {
       this.sockets = sockets || [];
-      return true;
+      return new Status();
     }
   }
 }
