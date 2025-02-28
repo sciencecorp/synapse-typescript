@@ -24,7 +24,6 @@ generate_proto() {
         -t static-module \
         -p ${dir_in} \
         -o ${dir_out}/api.js \
-        --force-long \
         ${protos}
 
     pbts \
