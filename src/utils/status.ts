@@ -1,15 +1,31 @@
-import { status as StatusCode } from "@grpc/grpc-js";
+import { Status as StatusCode } from "@grpc/grpc-js/build/src/constants";
 import { synapse } from "../api/api";
 
-class Status {
-  constructor(public code: StatusCode = StatusCode.OK, public message: string = "") {}
+export interface IStatus {
+  code: StatusCode;
+  message: string;
+}
 
-  static fromProto(proto: any) {
-    return new Status(proto.code, proto.message);
-  }
+class Status implements IStatus {
+  constructor(public code: StatusCode = StatusCode.OK, public message: string = "") {}
 
   ok() {
     return this.code === StatusCode.OK;
+  }
+
+  toJSON() {
+    return {
+      code: this.code,
+      message: this.message,
+    };
+  }
+
+  static fromJSON(json: { code: StatusCode; message: string }) {
+    return new Status(json.code, json.message);
+  }
+
+  static fromProto(proto: any) {
+    return new Status(proto.code, proto.message);
   }
 }
 
