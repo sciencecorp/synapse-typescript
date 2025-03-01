@@ -6,7 +6,6 @@ import { FlatCompat } from "@eslint/eslintrc";
 import js from "@eslint/js";
 import _import from "eslint-plugin-import";
 
-//eslint-disable-next-line
 import tsParser from "@typescript-eslint/parser";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -19,7 +18,7 @@ const compat = new FlatCompat({
 
 export default [
   {
-    ignores: ["dist/*", "src/api/*"],
+    ignores: ["dist/*", "src/api/*", "src/api-science-device/*"],
   },
   ...fixupConfigRules(
     compat.extends(
