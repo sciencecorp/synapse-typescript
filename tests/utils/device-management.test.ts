@@ -34,7 +34,7 @@ describe("DeviceManager", () => {
           },
         });
 
-        deviceManager.rpc_auth.authenticateDevice = jest.fn((req, callback) => {
+        deviceManager.rpc_auth.authenticateDevice = jest.fn((req, options, callback) => {
           callback(null, response);
         });
 
@@ -53,7 +53,7 @@ describe("DeviceManager", () => {
       });
 
       it("should handle authentication error", async () => {
-        deviceManager.rpc_auth.authenticateDevice = jest.fn((req, callback) => {
+        deviceManager.rpc_auth.authenticateDevice = jest.fn((req, options, callback) => {
           callback(new Error("Authentication failed"));
         });
 
@@ -87,7 +87,7 @@ describe("DeviceManager", () => {
           ],
         });
 
-        deviceManager.rpc_auth.listKeys = jest.fn((req, callback) => {
+        deviceManager.rpc_auth.listKeys = jest.fn((req, options, callback) => {
           callback(null, response);
         });
 
@@ -101,7 +101,7 @@ describe("DeviceManager", () => {
       });
 
       it("should handle list keys error", async () => {
-        deviceManager.rpc_auth.listKeys = jest.fn((req, callback) => {
+        deviceManager.rpc_auth.listKeys = jest.fn((req, options, callback) => {
           callback(new Error("List keys failed"));
         });
 
@@ -119,7 +119,7 @@ describe("DeviceManager", () => {
           keyId: "test-key",
         });
 
-        deviceManager.rpc_auth.revokeKey = jest.fn((req, callback) => {
+        deviceManager.rpc_auth.revokeKey = jest.fn((req, options, callback) => {
           callback(null, response);
         });
 
@@ -133,7 +133,7 @@ describe("DeviceManager", () => {
       });
 
       it("should handle revoke key error", async () => {
-        deviceManager.rpc_auth.revokeKey = jest.fn((req, callback) => {
+        deviceManager.rpc_auth.revokeKey = jest.fn((req, options, callback) => {
           callback(new Error("Revoke key failed"));
         });
 
@@ -159,7 +159,7 @@ describe("DeviceManager", () => {
           ],
         });
 
-        deviceManager.rpc_update.listPackages = jest.fn((req, callback) => {
+        deviceManager.rpc_update.listPackages = jest.fn((req, options, callback) => {
           callback(null, response);
         });
 
@@ -171,7 +171,7 @@ describe("DeviceManager", () => {
       });
 
       it("should handle list packages error", async () => {
-        deviceManager.rpc_update.listPackages = jest.fn((req, callback) => {
+        deviceManager.rpc_update.listPackages = jest.fn((req, options, callback) => {
           callback(new Error("List packages failed"));
         });
 
@@ -188,7 +188,7 @@ describe("DeviceManager", () => {
           success: true,
         });
 
-        deviceManager.rpc_update.updatePackages = jest.fn((req, callback) => {
+        deviceManager.rpc_update.updatePackages = jest.fn((req, options, callback) => {
           callback(null, response);
         });
 
@@ -207,7 +207,7 @@ describe("DeviceManager", () => {
       });
 
       it("should handle update packages error", async () => {
-        deviceManager.rpc_update.updatePackages = jest.fn((req, callback) => {
+        deviceManager.rpc_update.updatePackages = jest.fn((req, options, callback) => {
           callback(new Error("Update packages failed"));
         });
 
@@ -231,7 +231,7 @@ describe("DeviceManager", () => {
           success: true,
         });
 
-        deviceManager.rpc_update.uploadPackage = jest.fn((req, callback) => {
+        deviceManager.rpc_update.uploadPackage = jest.fn((req, options, callback) => {
           callback(null, response);
         });
 
@@ -250,7 +250,7 @@ describe("DeviceManager", () => {
       });
 
       it("should handle upload package error", async () => {
-        deviceManager.rpc_update.uploadPackage = jest.fn((req, callback) => {
+        deviceManager.rpc_update.uploadPackage = jest.fn((req, options, callback) => {
           callback(new Error("Upload package failed"));
         });
 
