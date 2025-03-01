@@ -17,7 +17,6 @@ generate_proto() {
         -w es6 \
         -p ${dir_in} \
         -o ${dir_out}/proto.json \
-        --force-long \
         ${protos}
 
     pbjs \
