@@ -294,7 +294,12 @@ const main = async () => {
   console.log(`Connecting to device @ ${uri}`);
   const device = new Device(uri as string);
 
-  await info(device);
+  try {
+    await info(device);
+  } catch (err) {
+    console.error(`Failed to get device info (${err.code}): ${err.message}`);
+    return;
+  }
 
   if (argv._.includes("read")) {
     return read(device, argv);
