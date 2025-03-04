@@ -90,6 +90,50 @@ class Device {
     });
   }
 
+  // Logs
+
+  async getLogs(
+    query: synapse.LogQueryRequest,
+    options: CallOptions = {}
+  ): Promise<{ status: Status; response?: synapse.LogQueryResponse }> {
+    return new Promise((resolve, reject) => {
+      this.rpc.getLogs(query, options, (err: ServiceError, res: synapse.LogQueryResponse) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve({ status: new Status(), response: res });
+        }
+      });
+    });
+  }
+
+  async tailLogs(
+    query: synapse.ITailLogsRequest,
+    options: CallOptions = {},
+    callbacks: {
+      onData: (data: synapse.LogEntry) => void;
+      onEnd?: () => void;
+      onError?: (err: Error) => void;
+      onStatus?: (status: Status) => void;
+    }
+  ) {
+    const { onData, onEnd, onError, onStatus } = callbacks;
+    const call = this.rpc.tailLogs(query, options);
+    call.on("data", onData);
+    if (onEnd) {
+      call.on("end", onEnd);
+    }
+    if (onError) {
+      call.on("error", onError);
+    }
+    if (onStatus) {
+      call.on("status", (grpcStatus) => {
+        onStatus?.(new Status(grpcStatus.code, grpcStatus.details));
+      });
+    }
+    return call;
+  }
+
   _handleStatusResponse(status: synapse.IStatus): Status {
     const { code, message, sockets } = status;
     if (code !== synapse.StatusCode.kOk) {
