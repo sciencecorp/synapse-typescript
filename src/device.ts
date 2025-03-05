@@ -93,7 +93,7 @@ class Device {
   // Logs
 
   async getLogs(
-    query: synapse.LogQueryRequest,
+    query: synapse.ILogQueryRequest,
     options: CallOptions = {}
   ): Promise<{ status: Status; response?: synapse.LogQueryResponse }> {
     return new Promise((resolve, reject) => {

@@ -10,14 +10,12 @@ pbjs \
     -w es6 \
     -p ${PROTO_DIR} \
     -o ${PROTO_OUT_DIR}/proto.json \
-    --force-long \
     ${PROTOS}
 
 pbjs \
     -t static-module \
     -p ${PROTO_DIR} \
     -o ${PROTO_OUT_DIR}/api.js \
-    --force-long \
     ${PROTOS}
 
 pbts \
