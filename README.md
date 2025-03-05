@@ -2,6 +2,22 @@
 
 This repo contains the Node client for the [Synapse API](https://science.xyz/technologies/synapse). More information about the API can be found in the [docs](https://science.xyz/docs/d/synapse/index).
 
+## Installation
+
+```sh
+npm i @science-corporation/synapse
+```
+
+```typescript
+import { Config, Device, StreamOut, BroadbandSource } from "@science-corporation/synapse";
+```
+
+This repo wraps a gRPC client and so is not compatible with browser environments. However, utils and types may still be used in browser contexts with the `browser` export.
+
+```typescript
+import { Status, StatusCode, BroadbandSource, StreamOut } from "@science-corporation/synapse/browser";
+```
+
 ## Building
 
 ### Prerequisites
@@ -27,7 +43,7 @@ console.log("Device info: ", info);
 
 const streamOut = new StreamOut(
   {
-    multicastGroup: "239.0.0.1",
+    multicastGroup: "224.0.0.1",
   },
   (msg: Buffer) => {
     console.log("StreamOut | recv: ", msg);
