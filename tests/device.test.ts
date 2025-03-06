@@ -1,3 +1,4 @@
+import Long from "long";
 import { synapse } from "../src/api/api";
 import Device from "../src/device";
 import Config from "../src/config";
@@ -126,7 +127,7 @@ describe("Device", () => {
       const mockResponse: synapse.ILogQueryResponse = {
         entries: [
           {
-            timestampNs: Date.now() * 1000000,
+            timestampNs: Long.fromNumber(Date.now() * 1000000),
             level: synapse.LogLevel.LOG_LEVEL_INFO,
             source: "test",
             message: "test message",
@@ -163,7 +164,7 @@ describe("Device", () => {
   describe("tailLogs", () => {
     it("should tail logs successfully", async () => {
       const mockEntry: synapse.ILogEntry = {
-        timestampNs: Date.now() * 1000000,
+        timestampNs: Long.fromNumber(Date.now() * 1000000),
         level: synapse.LogLevel.LOG_LEVEL_INFO,
         source: "test",
         message: "test message",
