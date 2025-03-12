@@ -162,6 +162,7 @@ const read = async (device: Device, argv: any) => {
     running = false;
     nodeStreamOut.stop();
     device.stop();
+    process.exit();
   });
 };
 
@@ -283,7 +284,9 @@ const main = async () => {
   if (argv._.includes("discover")) {
     const devices = await discover();
     for (const device of devices) {
-      console.log(`${device.host}:${device.port}   ${device.capability}   ${device.name} (${device.serial})`);
+      const addr = `${device.host}:${device.port}`;
+      const serial = `[${device.serial}]`;
+      console.log(`${addr.padEnd(21)} ${device.capability.padStart(16)} ${serial.padStart(34)} "${device.name}"`);
     }
     return;
   }

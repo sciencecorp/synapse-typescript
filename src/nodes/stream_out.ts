@@ -52,18 +52,14 @@ class StreamOut extends Node {
         this._onError?.(error);
       });
 
-      this._socket.setRecvBufferSize(kSocketBufferSize);
-      const actualBufferSize = this._socket.getRecvBufferSize();
-      if (actualBufferSize < kSocketBufferSize) {
-        // continue
-      }
-
       await new Promise<void>((resolve, reject) => {
         if (!this._socket) return reject(new Error("Socket is null"));
 
         this._socket.bind(this._destinationPort, this._destinationAddress, () => {
           resolve();
         });
+
+        this._socket.setRecvBufferSize(kSocketBufferSize);
       });
 
       return true;
