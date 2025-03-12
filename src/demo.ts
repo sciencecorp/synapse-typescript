@@ -16,10 +16,11 @@ const cli = yargs(hideBin(process.argv))
   .help()
   .command("discover", "Discover synapse devices")
   .command("read", "Read from StreamOut node", {
-    "multicast-group": {
-      alias: "m",
+    "udp-port": {
+      alias: "p",
       type: "string",
-      description: "Multicast group",
+      description: "UDP port",
+      default: "50058",
     },
     output: {
       alias: "o",
@@ -93,7 +94,7 @@ const info = async (device: Device) => {
 const read = async (device: Device, argv: any) => {
   console.log("Reading from device's StreamOut node...");
 
-  const { multicastGroup, output } = argv;
+  const { udpPort, output } = argv;
   let status = null;
   let stream = null;
   if (output) {
@@ -122,7 +123,9 @@ const read = async (device: Device, argv: any) => {
   });
   const nodeStreamOut = new StreamOut(
     {
-      multicastGroup,
+      udpUnicast: {
+        destinationPort: udpPort,
+      },
     },
     onMessage
   );
