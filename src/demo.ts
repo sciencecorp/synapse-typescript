@@ -151,7 +151,11 @@ const read = async (device: Device, argv: any) => {
     return;
   }
 
-  nodeStreamOut.start();
+  status = await nodeStreamOut.start();
+  if (!status.ok()) {
+    console.error("failed to start stream out node: ", status.message);
+    return;
+  }
 
   let running = true;
   process.on("SIGINT", function () {

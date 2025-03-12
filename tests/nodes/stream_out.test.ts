@@ -1,4 +1,3 @@
-import dgram from "dgram";
 import { MockSocket } from "../mocks/udp";
 import StreamOut from "../../src/nodes/stream_out";
 import { synapse } from "../../src/api/api";
@@ -50,10 +49,10 @@ describe("StreamOut", () => {
       });
 
       const startResult = await node.start();
-      expect(startResult).toBeTruthy();
+      expect(startResult.ok()).toBeTruthy();
 
       const stopResult = await node.stop();
-      expect(stopResult).toBeTruthy();
+      expect(stopResult.ok()).toBeTruthy();
     });
   });
 
@@ -99,13 +98,13 @@ describe("StreamOut", () => {
       const node = new StreamOut({ label: "test" }, onMessage);
 
       // Mock socket error - call error callback immediately
-      mockSocket.bind.mockImplementation((port: number, addr?: string, callback?: () => void) => {
+      mockSocket.bind.mockImplementation(() => {
         // Simulate a bind error by not calling the callback
         throw new Error("Bind error");
       });
 
       const result = await node.start();
-      expect(result).toBe(false);
+      expect(result.ok()).toBeFalsy();
       expect(onMessage).not.toHaveBeenCalled();
     });
   });

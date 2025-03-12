@@ -2,6 +2,7 @@ import dgram from "dgram";
 
 import { synapse } from "../api/api";
 import Node from "../node";
+import { Status, StatusCode } from "../utils/status";
 
 const kDefaultStreamOutPort = 50038;
 const kSocketBufferSize = 5 * 1024 * 1024; // 5MB
@@ -23,6 +24,7 @@ class StreamOut extends Node {
     this._destinationPort = udpUnicast?.destinationPort || kDefaultStreamOutPort;
     this._label = config.label;
     this._onMessage = onMessage;
+    this._onError = onError;
   }
 
   private getClientIp(): string | null {
@@ -35,12 +37,12 @@ class StreamOut extends Node {
       const address = socket.address();
       socket.close();
       return address.address;
-    } catch (e) {
+    } catch {
       return null;
     }
   }
 
-  async start(): Promise<boolean> {
+  async start(): Promise<Status> {
     try {
       this._socket = dgram.createSocket("udp4");
 
@@ -62,18 +64,18 @@ class StreamOut extends Node {
         this._socket.setRecvBufferSize(kSocketBufferSize);
       });
 
-      return true;
+      return new Status();
     } catch (e) {
-      return false;
+      return new Status(StatusCode.INTERNAL, `failed to start stream out node: ${e}`);
     }
   }
 
-  async stop(): Promise<boolean> {
+  async stop(): Promise<Status> {
     if (this._socket) {
       this._socket.close();
     }
 
-    return true;
+    return new Status();
   }
 
   toProto(): synapse.NodeConfig {
