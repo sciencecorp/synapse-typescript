@@ -1,17 +1,9 @@
 {
   "packages": {
     ".": {
-      "release-type": "simple",
-      "extra-files": [
-        {
-          "path": "python/pyproject.toml",
-          "type": "toml",
-          "jsonpath": "$.project.version"
-        }
-      ]
+      "release-type": "node"
     }
   },
   "bootstrap-sha": "4adc7ca2323c925aaec0c0ba585eb333b2cb04a1",
-  "always-update": true,
-  "bump-minor-pre-major": true
+  "always-update": true
 }
