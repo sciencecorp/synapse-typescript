@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.13.0](https://github.com/sciencecorp/synapse-typescript/compare/v0.12.0...v0.13.0) (2025-03-13)
+
+
+### Features
+
+* **disk-writer:** add DiskWriter node ([5274dd8](https://github.com/sciencecorp/synapse-typescript/commit/5274dd8ece541e388811c2a8e06b4919e1451c5a))
+
 ## [0.12.0](https://github.com/sciencecorp/synapse-typescript/compare/v0.11.1...v0.12.0) (2025-03-06)
 
 
