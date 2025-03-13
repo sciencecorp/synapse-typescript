@@ -111,7 +111,7 @@ const read = async (device: Device, argv: any) => {
 
   const config = new Config();
   const nodeEphys = new ElectricalBroadband({
-    peripheralId: 3,
+    peripheralId: 100,
     signal: {
       electrode: {
         channels: [{ id: 0, referenceId: 0, electrodeId: 1 }],

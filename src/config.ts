@@ -1,6 +1,7 @@
 import Node from "./node";
 import { synapse } from "./api/api";
 import BroadbandSource from "./nodes/broadband_source";
+import DiskWriter from "./nodes/disk_writer";
 import ElectricalStimulation from "./nodes/electrical_stimulation";
 import OpticalStimulation from "./nodes/optical_stimulation";
 import SpectralFilter from "./nodes/spectral_filter";
@@ -13,6 +14,7 @@ import { Status, StatusCode } from "./utils/status";
 type Connection = [number, number];
 const kNodeTypeObjectMap = {
   [synapse.NodeType.kBroadbandSource]: BroadbandSource,
+  [synapse.NodeType.kDiskWriter]: DiskWriter,
   [synapse.NodeType.kElectricalStimulation]: ElectricalStimulation,
   [synapse.NodeType.kSpikeSource]: SpikeSource,
   [synapse.NodeType.kOpticalStimulation]: OpticalStimulation,

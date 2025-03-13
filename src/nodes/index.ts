@@ -1,4 +1,5 @@
 export { default as BroadbandSource } from "./broadband_source";
+export { default as DiskWriter } from "./disk_writer";
 export { default as ElectricalStimulation } from "./electrical_stimulation";
 export { default as OpticalStimulation } from "./optical_stimulation";
 export { default as SpectralFilter } from "./spectral_filter";
