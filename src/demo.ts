@@ -16,10 +16,11 @@ const cli = yargs(hideBin(process.argv))
   .help()
   .command("discover", "Discover synapse devices")
   .command("read", "Read from StreamOut node", {
-    "multicast-group": {
-      alias: "m",
+    "udp-port": {
+      alias: "p",
       type: "string",
-      description: "Multicast group",
+      description: "UDP port",
+      default: "50058",
     },
     output: {
       alias: "o",
@@ -93,7 +94,7 @@ const info = async (device: Device) => {
 const read = async (device: Device, argv: any) => {
   console.log("Reading from device's StreamOut node...");
 
-  const { multicastGroup, output } = argv;
+  const { udpPort, output } = argv;
   let status = null;
   let stream = null;
   if (output) {
@@ -122,7 +123,9 @@ const read = async (device: Device, argv: any) => {
   });
   const nodeStreamOut = new StreamOut(
     {
-      multicastGroup,
+      udpUnicast: {
+        destinationPort: udpPort,
+      },
     },
     onMessage
   );
@@ -148,7 +151,11 @@ const read = async (device: Device, argv: any) => {
     return;
   }
 
-  nodeStreamOut.start();
+  status = await nodeStreamOut.start();
+  if (!status.ok()) {
+    console.error("failed to start stream out node: ", status.message);
+    return;
+  }
 
   let running = true;
   process.on("SIGINT", function () {
@@ -159,6 +166,7 @@ const read = async (device: Device, argv: any) => {
     running = false;
     nodeStreamOut.stop();
     device.stop();
+    process.exit();
   });
 };
 
@@ -280,7 +288,9 @@ const main = async () => {
   if (argv._.includes("discover")) {
     const devices = await discover();
     for (const device of devices) {
-      console.log(`${device.host}:${device.port}   ${device.capability}   ${device.name} (${device.serial})`);
+      const addr = `${device.host}:${device.port}`;
+      const serial = `[${device.serial}]`;
+      console.log(`${addr.padEnd(21)} ${device.capability.padStart(16)} ${serial.padStart(34)} "${device.name}"`);
     }
     return;
   }

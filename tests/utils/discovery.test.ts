@@ -1,32 +1,6 @@
 import dgram from "dgram";
 import { discover } from "../../src/utils/discover";
-
-class MockSocket {
-  private handlers: { [event: string]: any[] } = {};
-
-  on = jest.fn().mockImplementation((event: string, callback: any) => {
-    if (!this.handlers[event]) {
-      this.handlers[event] = [];
-    }
-    this.handlers[event].push(callback);
-  });
-
-  send = jest.fn();
-
-  close = jest.fn().mockImplementation(() => {
-    if (this.handlers["close"]) {
-      this.handlers["close"].forEach((cb) => cb());
-    }
-  });
-
-  bind = jest.fn();
-
-  emit(event: string, ...args: any[]) {
-    if (this.handlers[event]) {
-      this.handlers[event].forEach((cb) => cb(...args));
-    }
-  }
-}
+import { MockSocket } from "../mocks/udp";
 
 const mockSocket = new MockSocket();
 

@@ -2,80 +2,93 @@ import dgram from "dgram";
 
 import { synapse } from "../api/api";
 import Node from "../node";
+import { Status, StatusCode } from "../utils/status";
 
-const kMulticastTTL = 3;
+const kDefaultStreamOutPort = 50038;
+const kSocketBufferSize = 5 * 1024 * 1024; // 5MB
 
 class StreamOut extends Node {
   type = synapse.NodeType.kStreamOut;
-  config: synapse.IStreamOutConfig;
-  _socket: dgram.Socket;
+  _destinationAddress: string;
+  _destinationPort: number;
+  _label: string;
+  _socket: dgram.Socket | null;
   _onMessage: ((msg: Buffer) => void) | null;
+  _onError: ((error: Error) => void) | null;
 
-  constructor(config: synapse.IStreamOutConfig, onMessage?: (msg: Buffer) => void) {
+  constructor(config: synapse.IStreamOutConfig, onMessage?: (msg: Buffer) => void, onError?: (error: Error) => void) {
     super();
 
-    this.config = config;
+    const { udpUnicast } = config || {};
+    this._destinationAddress = udpUnicast?.destinationAddress || this.getClientIp() || "127.0.0.1";
+    this._destinationPort = udpUnicast?.destinationPort || kDefaultStreamOutPort;
+    this._label = config.label;
     this._onMessage = onMessage;
+    this._onError = onError;
   }
 
-  async start(): Promise<boolean> {
-    if (this.device === null) {
-      return false;
+  private getClientIp(): string | null {
+    try {
+      const socket = dgram.createSocket("udp4");
+      socket.bind(0);
+
+      socket.send(Buffer.from([]), 0, 0, 53, "8.8.8.8", () => {});
+
+      const address = socket.address();
+      socket.close();
+      return address.address;
+    } catch {
+      return null;
     }
-
-    const socket = this.device.sockets.find((s) => s.nodeId === this.id);
-    if (!socket) {
-      return false;
-    }
-
-    const split = socket.bind.split(":");
-    if (split.length !== 2) {
-      return false;
-    }
-
-    const port = parseInt(split[1]);
-    if (isNaN(port)) {
-      return false;
-    }
-
-    const host = this.config.multicastGroup;
-    if (!host) {
-      return false;
-    }
-
-    this._socket = dgram.createSocket("udp4");
-
-    this._socket.on("error", () => {});
-
-    this._socket.on("message", (msg: Buffer) => {
-      this._onMessage?.(msg);
-    });
-
-    this._socket.bind(port, host, () => {
-      if (!this._socket) {
-        return;
-      }
-
-      if (this.config.multicastGroup) {
-        this._socket.setMulticastTTL(kMulticastTTL);
-        this._socket.addMembership(this.config.multicastGroup);
-      }
-    });
-
-    return true;
   }
 
-  async stop(): Promise<boolean> {
+  async start(): Promise<Status> {
+    try {
+      this._socket = dgram.createSocket("udp4");
+
+      this._socket.on("message", (msg: Buffer) => {
+        this._onMessage?.(msg);
+      });
+
+      this._socket.on("error", (error: Error) => {
+        this._onError?.(error);
+      });
+
+      await new Promise<void>((resolve, reject) => {
+        if (!this._socket) return reject(new Error("Socket is null"));
+
+        this._socket.bind(this._destinationPort, this._destinationAddress, () => {
+          resolve();
+        });
+
+        this._socket.setRecvBufferSize(kSocketBufferSize);
+      });
+
+      return new Status();
+    } catch (e) {
+      return new Status(StatusCode.INTERNAL, `failed to start stream out node: ${e}`);
+    }
+  }
+
+  async stop(): Promise<Status> {
     if (this._socket) {
       this._socket.close();
     }
 
-    return true;
+    return new Status();
   }
 
   toProto(): synapse.NodeConfig {
+    const config: synapse.IStreamOutConfig = {
+      label: this._label,
+      udpUnicast: {
+        destinationAddress: this._destinationAddress,
+        destinationPort: this._destinationPort,
+      },
+    };
+
     return super.toProto({
-      streamOut: this.config,
+      streamOut: config,
     });
   }
 
@@ -85,7 +98,7 @@ class StreamOut extends Node {
       throw new Error("Invalid config, missing streamOut");
     }
 
-    return new StreamOut(streamOut);
+    return new StreamOut(streamOut, undefined);
   }
 }
 
