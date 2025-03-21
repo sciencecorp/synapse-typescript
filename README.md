@@ -44,7 +44,7 @@ console.log("Device info: ", info);
 const streamOut = new StreamOut(
   {
     udpUnicast: {
-      destinationPort: 50051,
+      destinationPort: 50038,
     },
   },
   (msg: Buffer) => {

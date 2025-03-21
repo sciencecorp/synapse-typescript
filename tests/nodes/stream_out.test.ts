@@ -20,7 +20,7 @@ describe("StreamOut", () => {
       const node = new StreamOut(config);
       expect(node._destinationPort).toBe(50038);
       expect(node._label).toBe("test");
-      expect(node._destinationAddress).toMatch(/^(\d{1,3}\.){3}\d{1,3}$/);
+      expect(node._destinationAddress).toBeUndefined();
     });
     it("should initialize with custom UDP config", () => {
       const config: synapse.IStreamOutConfig = {
@@ -40,6 +40,9 @@ describe("StreamOut", () => {
     it("should start and stop successfully", async () => {
       const config: synapse.IStreamOutConfig = {
         label: "test",
+        udpUnicast: {
+          destinationAddress: "192.168.1.100",
+        },
       };
       const node = new StreamOut(config);
 
@@ -73,6 +76,9 @@ describe("StreamOut", () => {
 
       const config: synapse.IStreamOutConfig = {
         label: "test",
+        udpUnicast: {
+          destinationAddress: "192.168.1.100",
+        },
       };
       const node = new StreamOut(config, { onMessage });
 

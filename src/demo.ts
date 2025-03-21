@@ -11,6 +11,7 @@ import StreamIn from "./nodes/stream_in";
 import StreamOut from "./nodes/stream_out";
 import { discover } from "./utils/discover";
 import { getName } from "./utils/enum";
+import { getClientIp } from "./utils/ip";
 
 const cli = yargs(hideBin(process.argv))
   .help()
@@ -20,7 +21,7 @@ const cli = yargs(hideBin(process.argv))
       alias: "p",
       type: "string",
       description: "UDP port",
-      default: "50058",
+      default: "50038",
     },
     output: {
       alias: "o",
@@ -125,6 +126,7 @@ const read = async (device: Device, argv: any) => {
     {
       udpUnicast: {
         destinationPort: udpPort,
+        destinationAddress: await getClientIp(),
       },
     },
     { onMessage }

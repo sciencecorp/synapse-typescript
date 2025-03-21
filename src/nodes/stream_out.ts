@@ -3,6 +3,7 @@ import dgram from "dgram";
 import { synapse } from "../api/api";
 import Node from "../node";
 import { Status, StatusCode } from "../utils/status";
+import { getClientIp } from "../utils/ip";
 
 const kDefaultStreamOutPort = 50038;
 const kSocketBufferSize = 5 * 1024 * 1024; // 5MB
@@ -23,31 +24,32 @@ class StreamOut extends Node {
     super();
 
     const { udpUnicast } = config || {};
-    this._destinationAddress = udpUnicast?.destinationAddress || this.getClientIp() || "127.0.0.1";
+    this._destinationAddress = udpUnicast?.destinationAddress;
     this._destinationPort = udpUnicast?.destinationPort || kDefaultStreamOutPort;
     this._label = config.label;
     this._onMessage = callbacks?.onMessage;
     this._onError = callbacks?.onError;
   }
 
-  private getClientIp(): string | null {
-    try {
-      const socket = dgram.createSocket("udp4");
-      socket.bind(0);
-
-      socket.send(Buffer.from([]), 0, 0, 53, "8.8.8.8", () => {});
-
-      const address = socket.address();
-      socket.close();
-      return address.address;
-    } catch {
-      return null;
-    }
-  }
-
   async start(): Promise<Status> {
     try {
       this._socket = dgram.createSocket("udp4");
+
+      if (!this._destinationAddress) {
+        try {
+          const ip = await getClientIp();
+          if (!ip) {
+            return new Status(StatusCode.INTERNAL, "failed to get client ip");
+          }
+          this._destinationAddress = ip;
+        } catch (e) {
+          console.error(e);
+          return new Status(StatusCode.INTERNAL, `failed to get client ip: ${e}`);
+        }
+      }
+      if (!this._destinationPort) {
+        this._destinationPort = kDefaultStreamOutPort;
+      }
 
       this._socket.on("message", (msg: Buffer) => {
         this._onMessage?.(msg);

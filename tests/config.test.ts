@@ -131,7 +131,7 @@ describe("Config", () => {
             streamOut: {
               label: "test-stream",
               udpUnicast: {
-                destinationPort: 50058,
+                destinationPort: 50038,
               },
             },
           },
