@@ -127,7 +127,7 @@ const read = async (device: Device, argv: any) => {
         destinationPort: udpPort,
       },
     },
-    onMessage
+    { onMessage }
   );
 
   status = config.add([nodeEphys, nodeStreamOut]);

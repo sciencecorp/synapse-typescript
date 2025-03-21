@@ -16,15 +16,18 @@ class StreamOut extends Node {
   _onMessage: ((msg: Buffer) => void) | null;
   _onError: ((error: Error) => void) | null;
 
-  constructor(config: synapse.IStreamOutConfig, onMessage?: (msg: Buffer) => void, onError?: (error: Error) => void) {
+  constructor(
+    config: synapse.IStreamOutConfig,
+    callbacks?: { onMessage?: (msg: Buffer) => void; onError?: (error: Error) => void }
+  ) {
     super();
 
     const { udpUnicast } = config || {};
     this._destinationAddress = udpUnicast?.destinationAddress || this.getClientIp() || "127.0.0.1";
     this._destinationPort = udpUnicast?.destinationPort || kDefaultStreamOutPort;
     this._label = config.label;
-    this._onMessage = onMessage;
-    this._onError = onError;
+    this._onMessage = callbacks?.onMessage;
+    this._onError = callbacks?.onError;
   }
 
   private getClientIp(): string | null {
@@ -58,10 +61,9 @@ class StreamOut extends Node {
         if (!this._socket) return reject(new Error("Socket is null"));
 
         this._socket.bind(this._destinationPort, this._destinationAddress, () => {
+          this._socket.setRecvBufferSize(kSocketBufferSize);
           resolve();
         });
-
-        this._socket.setRecvBufferSize(kSocketBufferSize);
       });
 
       return new Status();

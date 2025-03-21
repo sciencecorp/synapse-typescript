@@ -74,7 +74,7 @@ describe("StreamOut", () => {
       const config: synapse.IStreamOutConfig = {
         label: "test",
       };
-      const node = new StreamOut(config, onMessage);
+      const node = new StreamOut(config, { onMessage });
 
       // Mock socket message handling - call callback immediately
       mockSocket.on.mockImplementation((event: string, callback: any) => {
@@ -95,7 +95,7 @@ describe("StreamOut", () => {
 
     it("should handle socket errors during message processing", async () => {
       const onMessage = jest.fn();
-      const node = new StreamOut({ label: "test" }, onMessage);
+      const node = new StreamOut({ label: "test" }, { onMessage });
 
       // Mock socket error - call error callback immediately
       mockSocket.bind.mockImplementation(() => {
