@@ -130,7 +130,9 @@ describe("Config", () => {
             type: synapse.NodeType.kStreamOut,
             streamOut: {
               label: "test-stream",
-              multicastGroup: "224.1.1.1",
+              udpUnicast: {
+                destinationPort: 50038,
+              },
             },
           },
         ],

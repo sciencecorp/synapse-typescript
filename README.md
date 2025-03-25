@@ -43,7 +43,9 @@ console.log("Device info: ", info);
 
 const streamOut = new StreamOut(
   {
-    multicastGroup: "224.0.0.1",
+    udpUnicast: {
+      destinationPort: 50038,
+    },
   },
   (msg: Buffer) => {
     console.log("StreamOut | recv: ", msg);
@@ -51,7 +53,7 @@ const streamOut = new StreamOut(
 );
 
 const broadband = new BroadbandSource({
-  peripheralId: 1,
+  peripheralId: 100,
   sampleRateHz: 30000,
   bitWidth: 12,
   gain: 20.0,
