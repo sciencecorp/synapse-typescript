@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        build: [{ runner: "ubuntu-20.04" }]
+        build: [{ runner: "ubuntu-22.04" }]
     uses: ./.github/workflows/lint-test.yml
     with:
       runner: ${{ matrix.build.runner }}

@@ -4,7 +4,7 @@ on:
       runner:
         description: "The runner to use"
         required: true
-        default: "ubuntu-20.04"
+        default: "ubuntu-22.04"
         type: string
 
 permissions:
