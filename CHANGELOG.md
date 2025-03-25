@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0](https://github.com/sciencecorp/synapse-typescript/compare/synapse-v0.12.0...synapse-v1.0.0) (2025-03-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* migrate StreamOut from UDP multicast to UDP unicast
+* return 'Status' from Device and Config API methods
+
+### Features
+
+* add Device.getLogs, Device.tailLog RPCs ([#19](https://github.com/sciencecorp/synapse-typescript/issues/19)) ([43719e8](https://github.com/sciencecorp/synapse-typescript/commit/43719e819157b7ccb43ffccc927a26704fda7064))
+* add Status obj, return status from Device and Config calls ([#17](https://github.com/sciencecorp/synapse-typescript/issues/17)) ([c925f43](https://github.com/sciencecorp/synapse-typescript/commit/c925f436e23226be78421986e8f3172c8b89aa35))
+* **disk-writer:** add DiskWriter node ([1a40373](https://github.com/sciencecorp/synapse-typescript/commit/1a4037355fcd846b25de93b53416119569ca0e22))
+* support udp unicast in StreamOut node ([#27](https://github.com/sciencecorp/synapse-typescript/issues/27)) ([a175fd1](https://github.com/sciencecorp/synapse-typescript/commit/a175fd1fb79b6d9c30769a13d0d71fa3873b6718))
+
+
+### Bug Fixes
+
+* sha parsing and rate limiting on postinstall script ([#15](https://github.com/sciencecorp/synapse-typescript/issues/15)) ([11d6aec](https://github.com/sciencecorp/synapse-typescript/commit/11d6aec97154e6485e2f9588ad274d69bf57c9f4))
+
 ## [0.13.0](https://github.com/sciencecorp/synapse-typescript/compare/v0.12.0...v0.13.0) (2025-03-13)
 
 
