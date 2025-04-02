@@ -1,20 +1,12 @@
 #!/bin/bash
 
+echo "Postinstall - downloading synapse-api"
+
 # Platform detection
 IS_WINDOWS=false
 if [ "$OS" = "Windows_NT" ] || [ "$OSTYPE" = "msys" ] || [ "$OSTYPE" = "cygwin" ]; then
     IS_WINDOWS=true
 fi
-
-# If running on Windows, ensure we're using bash
-if [ "$IS_WINDOWS" = true ]; then
-    if ! command -v bash >/dev/null 2>&1; then
-        echo "Error: bash is required to run this script on Windows"
-        exit 1
-    fi
-fi
-
-echo "Postinstall - downloading synapse-api"
 
 # If synapse-api directory already exists, skip download
 if [ -d "synapse-api" ]; then
