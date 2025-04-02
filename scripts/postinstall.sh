@@ -86,7 +86,8 @@ echo "- Found synapse-api ref \"$REF_API\""
 
 # Create temp directory in a cross-platform way
 if [ "$IS_WINDOWS" = true ]; then
-    TMP_DIR=$(mktemp -d 2>/dev/null || echo "temp_dir_$RANDOM")
+    # Use a more reliable temp directory path on Windows
+    TMP_DIR="C:\\Users\\$USERNAME\\AppData\\Local\\Temp\\synapse-api-temp"
     mkdir -p "$TMP_DIR"
 else
     TMP_DIR=$(mktemp -d)
@@ -96,7 +97,7 @@ fi
 if ! curl -s -L "https://github.com/sciencecorp/synapse-api/archive/${REF_API}.zip" -o "$TMP_DIR/synapse-api.zip"; then
     if [ "$IS_WINDOWS" = true ]; then
         echo " - Curl failed, attempting download with PowerShell..."
-        powershell -Command "Invoke-WebRequest -Uri 'https://github.com/sciencecorp/synapse-api/archive/${REF_API}.zip' -OutFile '$TMP_DIR/synapse-api.zip'"
+        powershell -Command "Invoke-WebRequest -Uri 'https://github.com/sciencecorp/synapse-api/archive/${REF_API}.zip' -OutFile '$TMP_DIR\\synapse-api.zip'"
     else
         echo " - Failed to download synapse-api"
         exit 1
@@ -107,7 +108,7 @@ fi
 if [ "$IS_WINDOWS" = true ]; then
     if ! unzip -q "$TMP_DIR/synapse-api.zip" -d "$TMP_DIR" 2>/dev/null; then
         echo " - Unzip failed, attempting with PowerShell..."
-        powershell -Command "Expand-Archive -Path '$TMP_DIR/synapse-api.zip' -DestinationPath '$TMP_DIR' -Force"
+        powershell -Command "Expand-Archive -Path '$TMP_DIR\\synapse-api.zip' -DestinationPath '$TMP_DIR' -Force"
     fi
 else
     if ! unzip -q "$TMP_DIR/synapse-api.zip" -d "$TMP_DIR"; then
@@ -119,9 +120,7 @@ fi
 # Create directory and copy files in a cross-platform way
 mkdir -p synapse-api
 if [ "$IS_WINDOWS" = true ]; then
-    # Convert forward slashes to backslashes for Windows paths
-    TMP_DIR_WIN=$(echo "$TMP_DIR" | sed 's/\//\\/g')
-    powershell -Command "Copy-Item -Path \"$TMP_DIR_WIN\\synapse-api-${REF_API}\\*\" -Destination \"synapse-api\\\" -Recurse -Force"
+    powershell -Command "Copy-Item -Path \"$TMP_DIR\\synapse-api-${REF_API}\\*\" -Destination \"synapse-api\\\" -Recurse -Force"
 else
     cp -r "$TMP_DIR/synapse-api-${REF_API}/"* synapse-api/
 fi
