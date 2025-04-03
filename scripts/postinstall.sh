@@ -1,5 +1,19 @@
 #!/bin/bash
 
+# Platform detection
+IS_WINDOWS=false
+if [ "$OS" = "Windows_NT" ] || [ "$OSTYPE" = "msys" ] || [ "$OSTYPE" = "cygwin" ]; then
+    IS_WINDOWS=true
+fi
+
+# If running on Windows, ensure we're using bash
+if [ "$IS_WINDOWS" = true ]; then
+    if ! command -v bash >/dev/null 2>&1; then
+        echo "Error: bash is required to run this script on Windows"
+        exit 1
+    fi
+fi
+
 echo "Postinstall - downloading synapse-api"
 
 # If synapse-api directory already exists, skip download
@@ -21,7 +35,6 @@ if command -v git >/dev/null 2>&1 && git rev-parse --git-dir >/dev/null 2>&1; th
         echo " - Failed to update submodule, falling back to download..."
     fi
 fi
-
 
 # Else, fallback to downloading from github
 echo "Downloading synapse-api..."
@@ -71,22 +84,49 @@ fi
 
 echo "- Found synapse-api ref \"$REF_API\""
 
-TMP_DIR=$(mktemp -d)
+# Create temp directory in a cross-platform way
+if [ "$IS_WINDOWS" = true ]; then
+    # Use a more reliable temp directory path on Windows
+    TMP_DIR="C:\\Users\\$USERNAME\\AppData\\Local\\Temp\\synapse-api-temp"
+    mkdir -p "$TMP_DIR"
+else
+    TMP_DIR=$(mktemp -d)
+fi
+
+# Download using curl or fallback to PowerShell on Windows if curl fails
 if ! curl -s -L "https://github.com/sciencecorp/synapse-api/archive/${REF_API}.zip" -o "$TMP_DIR/synapse-api.zip"; then
-    echo " - Failed to download synapse-api"
-    exit 1
+    if [ "$IS_WINDOWS" = true ]; then
+        echo " - Curl failed, attempting download with PowerShell..."
+        powershell -Command "Invoke-WebRequest -Uri 'https://github.com/sciencecorp/synapse-api/archive/${REF_API}.zip' -OutFile '$TMP_DIR\\synapse-api.zip'"
+    else
+        echo " - Failed to download synapse-api"
+        exit 1
+    fi
 fi
 
-if ! unzip -q "$TMP_DIR/synapse-api.zip" -d "$TMP_DIR"; then
-    echo " - Failed to unzip synapse-api"
-    exit 1
+# Unzip in a cross-platform way
+if [ "$IS_WINDOWS" = true ]; then
+    if ! unzip -q "$TMP_DIR/synapse-api.zip" -d "$TMP_DIR" 2>/dev/null; then
+        echo " - Unzip failed, attempting with PowerShell..."
+        powershell -Command "Expand-Archive -Path '$TMP_DIR\\synapse-api.zip' -DestinationPath '$TMP_DIR' -Force"
+    fi
+else
+    if ! unzip -q "$TMP_DIR/synapse-api.zip" -d "$TMP_DIR"; then
+        echo " - Failed to unzip synapse-api"
+        exit 1
+    fi
 fi
 
+# Create directory and copy files in a cross-platform way
 mkdir -p synapse-api
-cp -r "$TMP_DIR/synapse-api-${REF_API}/"* synapse-api/
+if [ "$IS_WINDOWS" = true ]; then
+    powershell -Command "Copy-Item -Path \"$TMP_DIR\\synapse-api-${REF_API}\\*\" -Destination \"synapse-api\\\" -Recurse -Force"
+else
+    cp -r "$TMP_DIR/synapse-api-${REF_API}/"* synapse-api/
+fi
 
-rm "$TMP_DIR/synapse-api.zip"
-
+# Clean up temp files
+rm -rf "$TMP_DIR"
 
 if [ ! -f "synapse-api/README.md" ] || [ ! -f "synapse-api/COPYRIGHT" ] || [ ! -d "synapse-api/api" ]; then
     echo " - Failed to download synapse-api - missing required files"
