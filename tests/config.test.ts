@@ -1,7 +1,8 @@
 import Config from "../src/config";
 import { synapse } from "../src/api/api";
 import BroadbandSource from "../src/nodes/broadband_source";
-import SpikeDetect from "../src/nodes/spike_detect";
+import SpikeBinner from "../src/nodes/spike_binner";
+import SpikeDetector from "../src/nodes/spike_detector";
 
 describe("Config", () => {
   let config: Config;
@@ -50,7 +51,8 @@ describe("Config", () => {
   describe("connect", () => {
     it("should connect two nodes", () => {
       const node1 = new BroadbandSource();
-      const node2 = new SpikeDetect();
+      const node2 = new SpikeDetector();
+      const node3 = new SpikeBinner();
 
       let status = config.addNode(node1);
       expect(status.ok()).toBe(true);
@@ -58,14 +60,21 @@ describe("Config", () => {
       status = config.addNode(node2);
       expect(status.ok()).toBe(true);
 
+      status = config.addNode(node3);
+      expect(status.ok()).toBe(true);
+
       status = config.connect(node1, node2);
       expect(status.ok()).toBe(true);
       expect(config.connections).toContainEqual([node1.id, node2.id]);
+
+      status = config.connect(node2, node3);
+      expect(status.ok()).toBe(true);
+      expect(config.connections).toContainEqual([node2.id, node3.id]);
     });
 
     it("should reject connection if nodes don't have ids", () => {
       const node1 = new BroadbandSource();
-      const node2 = new SpikeDetect();
+      const node2 = new SpikeDetector();
       const status = config.connect(node1, node2);
       expect(status.ok()).toBe(false);
       expect(config.connections).toHaveLength(0);
@@ -74,16 +83,17 @@ describe("Config", () => {
 
   describe("add", () => {
     it("should add multiple nodes", () => {
-      const nodes = [new BroadbandSource(), new SpikeDetect()];
+      const nodes = [new BroadbandSource(), new SpikeDetector(), new SpikeBinner()];
       const status = config.add(nodes);
       expect(status.ok()).toBe(true);
-      expect(config.nodes).toHaveLength(2);
+      expect(config.nodes).toHaveLength(3);
       expect(nodes[0].id).toBe(1);
       expect(nodes[1].id).toBe(2);
+      expect(nodes[2].id).toBe(3);
     });
 
     it("should fail if any node already has an id", () => {
-      const nodes = [new BroadbandSource(), new SpikeDetect()];
+      const nodes = [new BroadbandSource(), new SpikeDetector()];
       nodes[1].id = 5;
       const status = config.add(nodes);
       expect(status.ok()).toBe(false);
@@ -102,28 +112,13 @@ describe("Config", () => {
           },
           {
             id: 2,
-            type: synapse.NodeType.kSpikeDetect,
-            spikeDetect: {},
+            type: synapse.NodeType.kSpikeDetector,
+            spikeDetector: {},
           },
           {
             id: 3,
-            type: synapse.NodeType.kSpikeSource,
-            spikeSource: {
-              peripheralId: 1,
-              sampleRateHz: 1000,
-              spikeWindowMs: 10,
-              gain: 1,
-              thresholdUV: 100,
-              electrodes: {
-                channels: [
-                  {
-                    id: 1,
-                  },
-                ],
-                lowCutoffHz: 100,
-                highCutoffHz: 1000,
-              },
-            },
+            type: synapse.NodeType.kSpikeBinner,
+            spikeBinner: {},
           },
           {
             id: 4,
@@ -142,6 +137,10 @@ describe("Config", () => {
             dstNodeId: 2,
           },
           {
+            srcNodeId: 2,
+            dstNodeId: 3,
+          },
+          {
             srcNodeId: 3,
             dstNodeId: 4,
           },
@@ -150,21 +149,24 @@ describe("Config", () => {
 
       const config = Config.fromProto(protoConfig);
       expect(config.nodes).toHaveLength(4);
-      expect(config.connections).toHaveLength(2);
+      expect(config.connections).toHaveLength(3);
       expect(config.nodes[0].id).toBe(1);
       expect(config.nodes[1].id).toBe(2);
       expect(config.nodes[2].id).toBe(3);
       expect(config.nodes[3].id).toBe(4);
       expect(config.connections[0]).toEqual([1, 2]);
-      expect(config.connections[1]).toEqual([3, 4]);
+      expect(config.connections[1]).toEqual([2, 3]);
+      expect(config.connections[2]).toEqual([3, 4]);
 
       const convertedProto = config.toProto();
       expect(convertedProto.nodes).toHaveLength(4);
-      expect(convertedProto.connections).toHaveLength(2);
+      expect(convertedProto.connections).toHaveLength(3);
       expect(convertedProto.connections[0].srcNodeId).toBe(1);
       expect(convertedProto.connections[0].dstNodeId).toBe(2);
-      expect(convertedProto.connections[1].srcNodeId).toBe(3);
-      expect(convertedProto.connections[1].dstNodeId).toBe(4);
+      expect(convertedProto.connections[1].srcNodeId).toBe(2);
+      expect(convertedProto.connections[1].dstNodeId).toBe(3);
+      expect(convertedProto.connections[2].srcNodeId).toBe(3);
+      expect(convertedProto.connections[2].dstNodeId).toBe(4);
     });
 
     it("should skip invalid node types in fromProto", () => {
@@ -185,8 +187,9 @@ describe("Config", () => {
   describe("setDevice", () => {
     it("should set device for all nodes", () => {
       const node1 = new BroadbandSource();
-      const node2 = new SpikeDetect();
-      config.add([node1, node2]);
+      const node2 = new SpikeDetector();
+      const node3 = new SpikeBinner();
+      config.add([node1, node2, node3]);
 
       const mockDevice = { id: "test-device" };
       const status = config.setDevice(mockDevice);
@@ -194,6 +197,7 @@ describe("Config", () => {
 
       expect(node1.device).toBe(mockDevice);
       expect(node2.device).toBe(mockDevice);
+      expect(node3.device).toBe(mockDevice);
     });
   });
 });

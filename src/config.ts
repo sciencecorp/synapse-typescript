@@ -5,7 +5,8 @@ import DiskWriter from "./nodes/disk_writer";
 import ElectricalStimulation from "./nodes/electrical_stimulation";
 import OpticalStimulation from "./nodes/optical_stimulation";
 import SpectralFilter from "./nodes/spectral_filter";
-import SpikeDetect from "./nodes/spike_detect";
+import SpikeBinner from "./nodes/spike_binner";
+import SpikeDetector from "./nodes/spike_detector";
 import SpikeSource from "./nodes/spike_source";
 import StreamIn from "./nodes/stream_in";
 import StreamOut from "./nodes/stream_out";
@@ -19,7 +20,8 @@ const kNodeTypeObjectMap = {
   [synapse.NodeType.kSpikeSource]: SpikeSource,
   [synapse.NodeType.kOpticalStimulation]: OpticalStimulation,
   [synapse.NodeType.kSpectralFilter]: SpectralFilter,
-  [synapse.NodeType.kSpikeDetect]: SpikeDetect,
+  [synapse.NodeType.kSpikeBinner]: SpikeBinner,
+  [synapse.NodeType.kSpikeDetector]: SpikeDetector,
   [synapse.NodeType.kStreamIn]: StreamIn,
   [synapse.NodeType.kStreamOut]: StreamOut,
 };
