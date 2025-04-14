@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0](https://github.com/sciencecorp/synapse-typescript/compare/synapse-v1.0.0...synapse-v2.0.0) (2025-04-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* add SpikeDetector, SpikeBinner nodes; remove SpikeDetect node
+
+### Features
+
+* add 'StreamQuery' support to Device ([#34](https://github.com/sciencecorp/synapse-typescript/issues/34)) ([fb2247a](https://github.com/sciencecorp/synapse-typescript/commit/fb2247afb23347d1ca23e9b1c1be10849b7e0f94))
+* add SpikeDetector, SpikeBinner nodes; remove SpikeDetect node ([#33](https://github.com/sciencecorp/synapse-typescript/issues/33)) ([5d6f263](https://github.com/sciencecorp/synapse-typescript/commit/5d6f2639e2235be97811818a15f9fb73edf82f85))
+
 ## [1.1.0](https://github.com/sciencecorp/synapse-typescript/compare/v1.0.1...v1.1.0) (2025-04-03)
 
 ### [1.0.1](https://github.com/sciencecorp/synapse-typescript/compare/v1.0.0...v1.0.1) (2025-03-26)
