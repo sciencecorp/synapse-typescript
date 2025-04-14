@@ -18,7 +18,7 @@ class Device {
     if (!status.ok() || !client) {
       throw new Error(`Failed to create client for ${uri}: ${status.message}`);
     }
-    this.rpc = client;
+    this.rpc = client as synapse.SynapseDevice;
   }
 
   async configure(config: Config, options: CallOptions = {}): Promise<Status> {
@@ -88,6 +88,39 @@ class Device {
         }
       });
     });
+  }
+
+  async streamQuery(
+    query: synapse.IStreamQueryRequest,
+    options: CallOptions = {},
+    callbacks: {
+      onData: (data: synapse.StreamQueryResponse) => void;
+      onEnd?: () => void;
+      onError?: (err: Error) => void;
+      onStatus?: (status: Status) => void;
+    }
+  ) {
+    const { onData, onEnd, onError, onStatus } = callbacks;
+    const call = this.rpc.streamQuery(query, options);
+    call.on("data", (data: synapse.StreamQueryResponse) => {
+      onData(data);
+    });
+    if (onEnd) {
+      call.on("end", () => {
+        onEnd();
+      });
+    }
+    if (onError) {
+      call.on("error", (err: ServiceError) => {
+        onError(err);
+      });
+    }
+    if (onStatus) {
+      call.on("status", (grpcStatus) => {
+        onStatus?.(new Status(grpcStatus.code, grpcStatus.details));
+      });
+    }
+    return call;
   }
 
   // Logs
