@@ -1,6 +1,7 @@
 {
   "name": "@science-corporation/synapse",
   "version": "2.0.1",
+  "synapsehash": "e05fa555064a289aa3010e94706f010e392ed713",
   "description": "Client library and CLI for the Synapse API",
   "license": "Apache-2.0",
   "main": "dist/index.js",

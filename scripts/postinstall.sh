@@ -42,12 +42,12 @@ echo "Downloading synapse-api..."
 if [ "$HAS_GIT" = true ]; then
     REF_LIB=$(git rev-parse HEAD)
 else
-    REF_LIB=$(node -p "require('./package.json').version")
+    REF_LIB=$(node -p "require('./package.json').synapsehash")
     if [ -z "$REF_LIB" ]; then
         echo " - Failed to get version from package.json"
         exit 1
     fi
-    REF_LIB=v$REF_LIB
+    REF_LIB=$REF_LIB
 fi
 
 echo "- Looking up synapse-api ref for synapse-typescript ref $REF_LIB"
