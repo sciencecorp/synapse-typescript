@@ -11,7 +11,6 @@ const kSynapseService = "synapse.SynapseDevice";
 class Device {
   rpc: any | null = null;
   channel: Channel | null = null;
-  sockets: synapse.INodeSocket[] = [];
 
   constructor(public uri: string) {
     const { status, client } = create(protos, kSynapseService)(uri, credentials.createInsecure());
@@ -48,8 +47,6 @@ class Device {
         } else if (!res) {
           reject(new Status(err.code, "failed to get device info: " + err.message));
         } else {
-          const { sockets } = res.status;
-          this.sockets = sockets || [];
           resolve({ status: new Status(), response: res });
         }
       });
@@ -168,11 +165,10 @@ class Device {
   }
 
   _handleStatusResponse(status: synapse.IStatus): Status {
-    const { code, message, sockets } = status;
+    const { code, message } = status;
     if (code !== synapse.StatusCode.kOk) {
       return fromDeviceStatus({ code, message });
     } else {
-      this.sockets = sockets || [];
       return new Status();
     }
   }
