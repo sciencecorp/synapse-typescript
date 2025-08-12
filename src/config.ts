@@ -8,8 +8,6 @@ import SpectralFilter from "./nodes/spectral_filter";
 import SpikeBinner from "./nodes/spike_binner";
 import SpikeDetector from "./nodes/spike_detector";
 import SpikeSource from "./nodes/spike_source";
-import StreamIn from "./nodes/stream_in";
-import StreamOut from "./nodes/stream_out";
 import { Status, StatusCode } from "./utils/status";
 
 type Connection = [number, number];
@@ -21,9 +19,7 @@ const kNodeTypeObjectMap = {
   [synapse.NodeType.kOpticalStimulation]: OpticalStimulation,
   [synapse.NodeType.kSpectralFilter]: SpectralFilter,
   [synapse.NodeType.kSpikeBinner]: SpikeBinner,
-  [synapse.NodeType.kSpikeDetector]: SpikeDetector,
-  [synapse.NodeType.kStreamIn]: StreamIn,
-  [synapse.NodeType.kStreamOut]: StreamOut,
+  [synapse.NodeType.kSpikeDetector]: SpikeDetector
 };
 
 class Config {
