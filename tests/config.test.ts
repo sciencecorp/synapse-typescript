@@ -120,16 +120,6 @@ describe("Config", () => {
             type: synapse.NodeType.kSpikeBinner,
             spikeBinner: {},
           },
-          {
-            id: 4,
-            type: synapse.NodeType.kStreamOut,
-            streamOut: {
-              label: "test-stream",
-              udpUnicast: {
-                destinationPort: 50038,
-              },
-            },
-          },
         ],
         connections: [
           {

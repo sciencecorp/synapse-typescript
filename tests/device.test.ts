@@ -100,14 +100,12 @@ describe("Device", () => {
     it("should handle successful status", () => {
       const deviceStatus: synapse.IStatus = {
         code: synapse.StatusCode.kOk,
-        sockets: [],
         message: "",
         state: synapse.DeviceState.kInitializing,
       };
       const status = device._handleStatusResponse(deviceStatus);
       expect(status.ok()).toBe(true);
       expect(status.code).toBe(StatusCode.OK);
-      expect(device.sockets).toEqual([]);
     });
 
     it("should handle error status", () => {
