@@ -64,6 +64,7 @@
     "google-protobuf": "^3.21.2",
     "long": "^5.3.1",
     "protobufjs-cli": "^1.1.2",
+    "tmp": "^0.2.5",
     "yargs": "^17.7.2"
   }
 }
