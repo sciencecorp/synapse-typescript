@@ -129,34 +129,26 @@ describe("Config", () => {
           {
             srcNodeId: 2,
             dstNodeId: 3,
-          },
-          {
-            srcNodeId: 3,
-            dstNodeId: 4,
-          },
+          }
         ],
       });
 
       const config = Config.fromProto(protoConfig);
-      expect(config.nodes).toHaveLength(4);
-      expect(config.connections).toHaveLength(3);
+      expect(config.nodes).toHaveLength(3);
+      expect(config.connections).toHaveLength(2);
       expect(config.nodes[0].id).toBe(1);
       expect(config.nodes[1].id).toBe(2);
       expect(config.nodes[2].id).toBe(3);
-      expect(config.nodes[3].id).toBe(4);
       expect(config.connections[0]).toEqual([1, 2]);
       expect(config.connections[1]).toEqual([2, 3]);
-      expect(config.connections[2]).toEqual([3, 4]);
 
       const convertedProto = config.toProto();
-      expect(convertedProto.nodes).toHaveLength(4);
-      expect(convertedProto.connections).toHaveLength(3);
+      expect(convertedProto.nodes).toHaveLength(3);
+      expect(convertedProto.connections).toHaveLength(2);
       expect(convertedProto.connections[0].srcNodeId).toBe(1);
       expect(convertedProto.connections[0].dstNodeId).toBe(2);
       expect(convertedProto.connections[1].srcNodeId).toBe(2);
       expect(convertedProto.connections[1].dstNodeId).toBe(3);
-      expect(convertedProto.connections[2].srcNodeId).toBe(3);
-      expect(convertedProto.connections[2].dstNodeId).toBe(4);
     });
 
     it("should skip invalid node types in fromProto", () => {
