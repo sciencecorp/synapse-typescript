@@ -86,3 +86,16 @@ npm version patch # increment last part of version number
 npm version minor # increment middle part
 npm version major # increment first part
 ```
+
+## Publishing
+Make sure to run the build commands:
+```
+git submodule update --init
+npm i
+npm run generate
+npm run build
+```
+then to publish (you need access to Science Corporation Org at npmjs.com):  
+```
+npm publish
+```
