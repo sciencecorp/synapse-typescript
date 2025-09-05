@@ -79,3 +79,10 @@ config.connect(broadband, streamOut);
 await device.configure(config);
 await device.start();
 ```
+
+## Bumping Version
+```
+npm version patch # increment last part of version number
+npm version minor # increment middle part
+npm version major # increment first part
+```
