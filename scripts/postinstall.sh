@@ -60,8 +60,24 @@ if [ -n "$SCIENCE_CORPORATION_SYNAPSE_TOKEN" ]; then
     CURL_OPTS+=(-H "Authorization: Bearer $SCIENCE_CORPORATION_SYNAPSE_TOKEN")
 fi
 
+fetch_synapse_api_sha() {
+    local use_auth="$1"
+    local opts=(-H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28")
+    if [ "$use_auth" = "true" ] && [ -n "$SCIENCE_CORPORATION_SYNAPSE_TOKEN" ]; then
+        opts+=(-H "Authorization: Bearer $SCIENCE_CORPORATION_SYNAPSE_TOKEN")
+    fi
+    curl -s "${opts[@]}" "https://api.github.com/repos/sciencecorp/synapse-typescript/contents/synapse-api?ref=$REF_LIB"
+}
+
 echo " - Fetching synapse-api submodule info..."
-CURL_RESULT=$(curl -s "${CURL_OPTS[@]}" "https://api.github.com/repos/sciencecorp/synapse-typescript/contents/synapse-api?ref=$REF_LIB")
+CURL_RESULT=$(fetch_synapse_api_sha "true")
+
+# Check for auth failure and retry without auth
+if echo "$CURL_RESULT" | grep -q '"Bad credentials"'; then
+    echo "   - Auth failed, retrying without authentication..."
+    CURL_RESULT=$(fetch_synapse_api_sha "false")
+fi
+
 if [ -z "$CURL_RESULT" ]; then
     echo "   - Failed to fetch from GitHub API"
     exit 1
