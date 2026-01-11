@@ -183,6 +183,65 @@ class Device {
     return call;
   }
 
+  // Apps
+
+  async listApps(options: CallOptions = {}): Promise<{ status: Status; response?: synapse.ListAppsResponse }> {
+    return new Promise((resolve, reject) => {
+      this.rpc.listApps({}, options, (err: ServiceError, res: synapse.ListAppsResponse) => {
+        if (err) {
+          reject(err);
+        } else if (!res) {
+          reject(new Error("No response from listApps"));
+        } else {
+          resolve({ status: new Status(), response: res });
+        }
+      });
+    });
+  }
+
+  deployApp(
+    options: CallOptions = {},
+    callbacks: {
+      onData: (data: synapse.AppDeployResponse) => void;
+      onEnd?: () => void;
+      onError?: (err: Error) => void;
+      onStatus?: (status: Status) => void;
+    }
+  ) {
+    const { onData, onEnd, onError, onStatus } = callbacks;
+    const call = this.rpc.deployApp(options);
+
+    call.on("data", (data: synapse.AppDeployResponse) => {
+      onData(data);
+    });
+    if (onEnd) {
+      call.on("end", onEnd);
+    }
+    if (onError) {
+      call.on("error", (err: ServiceError) => {
+        onError(err);
+      });
+    }
+    if (onStatus) {
+      call.on("status", (grpcStatus) => {
+        onStatus?.(new Status(grpcStatus.code, grpcStatus.details));
+      });
+    }
+
+    return {
+      call,
+      sendMetadata: (metadata: synapse.IPackageMetadata) => {
+        call.write({ metadata });
+      },
+      sendChunk: (fileChunk: Uint8Array) => {
+        call.write({ fileChunk });
+      },
+      end: () => {
+        call.end();
+      },
+    };
+  }
+
   _handleStatusResponse(status: synapse.IStatus): Status {
     const { code, message } = status;
     if (code !== synapse.StatusCode.kOk) {
