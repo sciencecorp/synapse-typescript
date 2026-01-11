@@ -14,6 +14,11 @@ jest.mock("dgram", () => ({
 describe("discover", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   it("should discover devices correctly", async () => {
@@ -30,18 +35,25 @@ describe("discover", () => {
     mockSocket.on.mockImplementation((event, callback) => {
       if (event === "message") {
         const message = Buffer.from("ID ABC123 SYN1.2.345 6470 test-device-123", "ascii");
-        setTimeout(() => callback(message, { address: "192.168.1.100" }), 10);
+        // Use setImmediate to trigger callback in next tick (works with fake timers)
+        setImmediate(() => callback(message, { address: "192.168.1.100" }));
       } else if (event === "close") {
-        setTimeout(() => callback(), 500);
+        // This will be triggered when timeout completes
+        setImmediate(() => callback());
       }
     });
 
-    const devices = await discover(500);
+    const discoverPromise = discover(500);
+
+    // Advance timers to trigger the timeout
+    jest.advanceTimersByTime(500);
+
+    const devices = await discoverPromise;
 
     expect(dgram.createSocket).toHaveBeenCalledWith({ type: "udp4", reuseAddr: true });
     expect(mockSocket.bind).toHaveBeenCalledWith(6470);
     expect(devices).toEqual(mockDevices);
-  }, 600);
+  });
 
   it("should handle invalid messages", async () => {
     mockSocket.on.mockImplementation((event, callback) => {
@@ -50,13 +62,16 @@ describe("discover", () => {
         const message = Buffer.from("INVALID MESSAGE", "ascii");
         callback(message, { address: "192.168.1.100" });
       } else if (event === "close") {
-        setTimeout(() => callback(), 100);
+        setImmediate(() => callback());
       }
     });
 
-    const devices = await discover(500);
+    const discoverPromise = discover(500);
+    jest.advanceTimersByTime(500);
+
+    const devices = await discoverPromise;
     expect(devices).toEqual([]);
-  }, 600);
+  });
 
   it("should handle socket errors", async () => {
     const error = new Error("Socket error");
@@ -68,5 +83,5 @@ describe("discover", () => {
     });
 
     await expect(discover(500)).rejects.toThrow("Socket error");
-  }, 600);
+  });
 });

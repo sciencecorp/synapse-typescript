@@ -4,8 +4,10 @@ PROTO_OUT_SRC_DIR=./src/api
 
 mkdir -p ${PROTO_OUT_DIST_DIR}
 
+# Compile TypeScript (excluding src/api which is protobuf-generated)
 ./node_modules/.bin/tsc
 
-pbts \
-    -o ${PROTO_OUT_DIST_DIR}/api.d.ts \
-    ${PROTO_OUT_SRC_DIR}/api.js
+# Copy protobuf-generated files to dist
+cp ${PROTO_OUT_SRC_DIR}/*.js ${PROTO_OUT_DIST_DIR}/
+cp ${PROTO_OUT_SRC_DIR}/*.d.ts ${PROTO_OUT_DIST_DIR}/
+cp ${PROTO_OUT_SRC_DIR}/*.json ${PROTO_OUT_DIST_DIR}/

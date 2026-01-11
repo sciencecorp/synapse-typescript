@@ -16,5 +16,5 @@
     "rootDir": "src"
   },
   "include": ["src/**/*"],
-  "exclude": ["tests/**/*"]
+  "exclude": ["tests/**/*", "src/api/**/*"]
 }

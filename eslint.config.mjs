@@ -6,7 +6,6 @@ import { FlatCompat } from "@eslint/eslintrc";
 import js from "@eslint/js";
 import _import from "eslint-plugin-import";
 
-//eslint-disable-next-line
 import tsParser from "@typescript-eslint/parser";
 
 const __filename = fileURLToPath(import.meta.url);

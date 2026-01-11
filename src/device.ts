@@ -120,6 +120,25 @@ class Device {
     return call;
   }
 
+  // Query (unary RPC for things like listing taps)
+
+  async query(
+    request: synapse.IQueryRequest,
+    options: CallOptions = {}
+  ): Promise<{ status: Status; response?: synapse.QueryResponse }> {
+    return new Promise((resolve, reject) => {
+      this.rpc.query(request, options, (err: ServiceError, res: synapse.QueryResponse) => {
+        if (err) {
+          reject(err);
+        } else if (!res) {
+          reject(new Error("No response from query"));
+        } else {
+          resolve({ status: new Status(), response: res });
+        }
+      });
+    });
+  }
+
   // Logs
 
   async getLogs(
