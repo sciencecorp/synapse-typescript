@@ -7,7 +7,7 @@ runs:
     - name: Use Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: "18.13.0"
+        node-version: "22.21.1"
 
     - name: Install dependencies
       run: |

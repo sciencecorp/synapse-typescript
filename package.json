@@ -43,7 +43,7 @@
   },
   "homepage": "https://github.com/sciencecorp/synapse-typescript#readme",
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "devDependencies": {
     "@eslint/compat": "^1.2.6",
