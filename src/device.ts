@@ -1,10 +1,32 @@
 import { Channel, credentials, ServiceError } from "@grpc/grpc-js";
+import * as fs from "fs";
+import * as crypto from "crypto";
+import * as path from "path";
+import Long from "long";
 
 import protos from "./api/proto.json";
 import { synapse } from "./api/api";
 import Config from "./config";
 import { CallOptions, create } from "./utils/client";
 import { fromDeviceStatus, Status } from "./utils/status";
+
+const FILE_CHUNK_SIZE = 1024 * 1024; // 1MB chunks
+
+function calculateSha256(filePath: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const hash = crypto.createHash("sha256");
+    const stream = fs.createReadStream(filePath);
+    stream.on("data", (data) => hash.update(data));
+    stream.on("end", () => resolve(hash.digest("hex")));
+    stream.on("error", reject);
+  });
+}
+
+function extractVersion(packageName: string): string {
+  // Format: package-name_version_architecture.deb
+  const parts = packageName.split("_");
+  return parts.length >= 2 ? parts[1] : "";
+}
 
 const kSynapseService = "synapse.SynapseDevice";
 
@@ -209,7 +231,7 @@ class Device {
     }
   ) {
     const { onData, onEnd, onError, onStatus } = callbacks;
-    const call = this.rpc.deployApp(options);
+    const call = this.rpc.deployApp({}, options);
 
     call.on("data", (data: synapse.AppDeployResponse) => {
       onData(data);
@@ -240,6 +262,65 @@ class Device {
         call.end();
       },
     };
+  }
+
+  async deploy(
+    debPackagePath: string,
+    callbacks?: {
+      onProgress?: (bytesTransferred: number, totalBytes: number) => void;
+      onStatus?: (message: string) => void;
+    }
+  ): Promise<Status> {
+    const fileName = path.basename(debPackagePath);
+    const fileSize = fs.statSync(debPackagePath).size;
+    const sha256Sum = await calculateSha256(debPackagePath);
+    const version = extractVersion(fileName);
+
+    const metadata: synapse.IPackageMetadata = {
+      name: fileName,
+      version,
+      size: Long.fromNumber(fileSize),
+      sha256Sum,
+    };
+
+    return new Promise((resolve, reject) => {
+      let bytesTransferred = 0;
+
+      const { sendMetadata, sendChunk, end } = this.deployApp({}, {
+        onData: (response) => {
+          callbacks?.onStatus?.(response.message || "");
+          if (response.status !== synapse.StatusCode.kOk) {
+            reject(new Error(response.message || "Deployment failed"));
+          }
+        },
+        onEnd: () => {
+          resolve(new Status());
+        },
+        onError: (err) => {
+          reject(err);
+        },
+      });
+
+      sendMetadata(metadata);
+
+      const stream = fs.createReadStream(debPackagePath, {
+        highWaterMark: FILE_CHUNK_SIZE,
+      });
+
+      stream.on("data", (chunk: Buffer) => {
+        sendChunk(chunk);
+        bytesTransferred += chunk.length;
+        callbacks?.onProgress?.(bytesTransferred, fileSize);
+      });
+
+      stream.on("end", () => {
+        end();
+      });
+
+      stream.on("error", (err) => {
+        reject(err);
+      });
+    });
   }
 
   _handleStatusResponse(status: synapse.IStatus): Status {
