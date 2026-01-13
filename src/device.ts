@@ -221,6 +221,31 @@ class Device {
     });
   }
 
+  // Settings
+
+  async updateDeviceSettings(
+    settings: synapse.IDeviceSettings,
+    options: CallOptions = {}
+  ): Promise<{ status: Status; response?: synapse.UpdateDeviceSettingsResponse }> {
+    return new Promise((resolve, reject) => {
+      const request: synapse.IUpdateDeviceSettingsRequest = { settings };
+      this.rpc.updateDeviceSettings(
+        request,
+        options,
+        (err: ServiceError, res: synapse.UpdateDeviceSettingsResponse) => {
+          if (err) {
+            reject(err);
+          } else if (!res) {
+            reject(new Error("No response from updateDeviceSettings"));
+          } else {
+            const status = res.status ? this._handleStatusResponse(res.status) : new Status();
+            resolve({ status, response: res });
+          }
+        }
+      );
+    });
+  }
+
   deployApp(
     options: CallOptions = {},
     callbacks: {
