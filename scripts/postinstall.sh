@@ -16,6 +16,18 @@ fi
 
 echo "Postinstall - downloading synapse-api"
 
+# TEMP DIAGNOSTIC: what does the install env actually expose to us?
+echo "=== diagnostic dump ==="
+echo "cwd: $(pwd)"
+echo "ls -A: $(ls -A 2>/dev/null | tr '\n' ' ')"
+echo "git available: $(command -v git || echo no)"
+echo "git rev-parse --git-dir: $(git rev-parse --git-dir 2>&1 || true)"
+echo "npm_package_resolved: ${npm_package_resolved:-<unset>}"
+echo "npm_package_gitHead: ${npm_package_gitHead:-<unset>}"
+echo "package.json gitHead: $(node -p "require('./package.json').gitHead || '<absent>'" 2>/dev/null || echo '<read-fail>')"
+echo "env vars (npm/git/ref): $(env | grep -iE '^(npm_|git|sha|ref)' | sort | tr '\n' ' ' | head -c 800)"
+echo "======================="
+
 # If synapse-api directory already exists, skip download
 if [ -d "synapse-api" ]; then
     echo " - synapse-api directory already exists, skipping download"
