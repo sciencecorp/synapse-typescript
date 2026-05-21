@@ -42,16 +42,30 @@ echo "Downloading synapse-api..."
 # Resolve which synapse-typescript ref to ask the GitHub API about, in order
 # of decreasing fidelity:
 #   1. git HEAD when there's a real working tree (most accurate).
-#   2. package.json#gitHead, which npm writes when installing a git dep —
-#      this is what lets `npm install git://...#<sha>` work even though npm
-#      strips the .git dir from its install cache. Without this rung the
-#      script falls through to the v$version tag, which doesn't exist on
-#      PR commits or any pre-release branch.
-#   3. v$version tag, as a last resort for vanilla tarball installs after a
+#   2. The SHA in $npm_package_resolved — npm exports this during install
+#      lifecycle scripts as `git+ssh://...#<sha>`. This is the one that
+#      makes `npm install git://...#<sha>` actually work, since during
+#      pacote's prepare phase the .git dir has been moved away and the
+#      package.json gitHead field has not yet been injected.
+#   3. package.json#gitHead — npm writes this after prepare completes, so
+#      it's available for downstream consumers reading an already-installed
+#      package, just not during the prepare phase itself.
+#   4. v$version tag, as a last resort for vanilla tarball installs after a
 #      release has tagged the version.
 REF_LIB=""
 if [ "$HAS_GIT" = true ]; then
     REF_LIB=$(git rev-parse HEAD)
+fi
+
+if [ -z "$REF_LIB" ] && [ -n "$npm_package_resolved" ]; then
+    # Strip everything up to and including the last '#' to get the SHA.
+    CANDIDATE="${npm_package_resolved##*#}"
+    # Only accept if it looks like a SHA (40 hex chars). Anything else is
+    # probably a URL with no fragment, which would leave the var untouched.
+    if [ "${#CANDIDATE}" = 40 ] && [ -z "${CANDIDATE//[0-9a-f]/}" ]; then
+        REF_LIB="$CANDIDATE"
+        echo " - Using npm_package_resolved SHA for ref lookup"
+    fi
 fi
 
 if [ -z "$REF_LIB" ]; then
