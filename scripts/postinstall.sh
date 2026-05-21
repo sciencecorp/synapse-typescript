@@ -39,15 +39,35 @@ fi
 # Else, fallback to downloading from github
 echo "Downloading synapse-api..."
 
+# Resolve which synapse-typescript ref to ask the GitHub API about, in order
+# of decreasing fidelity:
+#   1. git HEAD when there's a real working tree (most accurate).
+#   2. package.json#gitHead, which npm writes when installing a git dep —
+#      this is what lets `npm install git://...#<sha>` work even though npm
+#      strips the .git dir from its install cache. Without this rung the
+#      script falls through to the v$version tag, which doesn't exist on
+#      PR commits or any pre-release branch.
+#   3. v$version tag, as a last resort for vanilla tarball installs after a
+#      release has tagged the version.
+REF_LIB=""
 if [ "$HAS_GIT" = true ]; then
     REF_LIB=$(git rev-parse HEAD)
-else
-    REF_LIB=$(node -p "require('./package.json').version")
-    if [ -z "$REF_LIB" ]; then
+fi
+
+if [ -z "$REF_LIB" ]; then
+    REF_LIB=$(node -e "const p=require('./package.json'); if (p.gitHead) process.stdout.write(p.gitHead);" 2>/dev/null)
+    if [ -n "$REF_LIB" ]; then
+        echo " - Using package.json gitHead for ref lookup"
+    fi
+fi
+
+if [ -z "$REF_LIB" ]; then
+    PKG_VERSION=$(node -p "require('./package.json').version")
+    if [ -z "$PKG_VERSION" ]; then
         echo " - Failed to get version from package.json"
         exit 1
     fi
-    REF_LIB=v$REF_LIB
+    REF_LIB=v$PKG_VERSION
 fi
 
 echo "- Looking up synapse-api ref for synapse-typescript ref $REF_LIB"
