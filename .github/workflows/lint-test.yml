@@ -44,7 +44,16 @@ jobs:
         run: npm run test
         shell: bash
 
+  # The test-install jobs install this repo via `npm install git://...#<sha>`
+  # to verify the postinstall pipeline. They cannot run on PRs: pacote's
+  # prepare phase strips .git from its install cache and doesn't expose the
+  # commit SHA via any env var or package.json field, so postinstall.sh has
+  # no way to identify which synapse-api submodule SHA to download. After
+  # release-please tags the version on main, the v$version tag fallback in
+  # postinstall.sh works, which is what these jobs exercise. Run them on
+  # push to main and manual dispatch only.
   test-install:
+    if: github.event_name != 'pull_request'
     runs-on: ${{ inputs.runner }}
     steps:
       - name: Use Node.js
@@ -57,6 +66,7 @@ jobs:
         shell: bash
 
   test-install-with-token:
+    if: github.event_name != 'pull_request'
     runs-on: ${{ inputs.runner }}
     env:
       SCIENCE_CORPORATION_SYNAPSE_TOKEN: ${{ secrets.SCIENCECORP_SYNAPSE_READ_TOKEN }}
