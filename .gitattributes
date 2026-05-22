@@ -1,0 +1,10 @@
+# Default: let git handle text files normally based on platform conventions.
+* text=auto
+
+# Shell scripts must check out with LF regardless of platform autocrlf
+# settings. These get packed into the published npm tarball and run on the
+# consumer's machine — usually Linux CI runners — where bash fails on CRLF
+# with `$'\r': command not found`. Without this rule, a contributor whose
+# Windows git is configured with autocrlf=true produces CRLF in their
+# working tree, and `npm publish` from that WT bakes CRLF into the tarball.
+*.sh text eol=lf
