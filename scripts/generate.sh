@@ -5,6 +5,16 @@ PROTOS=$(find ${PROTO_DIR} -name '*.proto' | sed "s|${PROTO_DIR}/||")
 
 mkdir -p ${PROTO_OUT_DIR}
 
+# Mirror synapse-api/VERSION into src/api_version.ts so the protocol
+# version is available as a constant in both node and browser builds.
+if [ -f "${PROTO_DIR}/VERSION" ]; then
+    SYNAPSE_API_VERSION=$(tr -d '[:space:]' < ${PROTO_DIR}/VERSION)
+    cat > ./src/api_version.ts <<EOF
+// Generated from synapse-api/VERSION by scripts/generate.sh. Do not edit.
+export const SYNAPSE_API_VERSION = "${SYNAPSE_API_VERSION}";
+EOF
+fi
+
 pbjs \
     -t json \
     -w es6 \
