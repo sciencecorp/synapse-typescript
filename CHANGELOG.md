@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.0.0](https://github.com/sciencecorp/synapse-typescript/compare/synapse-v2.3.1...synapse-v3.0.0) (2026-06-10)
+
+
+### ⚠ BREAKING CHANGES
+
+* add SpikeDetector, SpikeBinner nodes; remove SpikeDetect node
+* migrate StreamOut from UDP multicast to UDP unicast
+* return 'Status' from Device and Config API methods
+
+### Features
+
+* add 'StreamQuery' support to Device ([#34](https://github.com/sciencecorp/synapse-typescript/issues/34)) ([fb2247a](https://github.com/sciencecorp/synapse-typescript/commit/fb2247afb23347d1ca23e9b1c1be10849b7e0f94))
+* add Device.getLogs, Device.tailLog RPCs ([#19](https://github.com/sciencecorp/synapse-typescript/issues/19)) ([43719e8](https://github.com/sciencecorp/synapse-typescript/commit/43719e819157b7ccb43ffccc927a26704fda7064))
+* add SpikeDetector, SpikeBinner nodes; remove SpikeDetect node ([#33](https://github.com/sciencecorp/synapse-typescript/issues/33)) ([5d6f263](https://github.com/sciencecorp/synapse-typescript/commit/5d6f2639e2235be97811818a15f9fb73edf82f85))
+* add Status obj, return status from Device and Config calls ([#17](https://github.com/sciencecorp/synapse-typescript/issues/17)) ([c925f43](https://github.com/sciencecorp/synapse-typescript/commit/c925f436e23226be78421986e8f3172c8b89aa35))
+* bump version api ([#38](https://github.com/sciencecorp/synapse-typescript/issues/38)) ([b395a65](https://github.com/sciencecorp/synapse-typescript/commit/b395a65278e69eb54105605035341a0b88273106))
+* **disk-writer:** add DiskWriter node ([1a40373](https://github.com/sciencecorp/synapse-typescript/commit/1a4037355fcd846b25de93b53416119569ca0e22))
+* support udp unicast in StreamOut node ([#27](https://github.com/sciencecorp/synapse-typescript/issues/27)) ([a175fd1](https://github.com/sciencecorp/synapse-typescript/commit/a175fd1fb79b6d9c30769a13d0d71fa3873b6718))
+
+
+### Bug Fixes
+
+* sha parsing and rate limiting on postinstall script ([#15](https://github.com/sciencecorp/synapse-typescript/issues/15)) ([11d6aec](https://github.com/sciencecorp/synapse-typescript/commit/11d6aec97154e6485e2f9588ad274d69bf57c9f4))
+
 ## [2.0.0](https://github.com/sciencecorp/synapse-typescript/compare/synapse-v1.0.0...synapse-v2.0.0) (2025-04-14)
 
 
