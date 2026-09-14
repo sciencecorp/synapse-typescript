@@ -1,3 +1,4 @@
+import { Metadata } from "@grpc/grpc-js";
 import Long from "long";
 import { synapse } from "../src/api/api";
 import Device from "../src/device";
@@ -23,6 +24,23 @@ describe("Device", () => {
     });
   });
 
+  describe("auth token", () => {
+    it("attaches the token as call metadata", () => {
+      const tokenDevice = new Device("localhost:647", { token: "f3a9c1" });
+
+      const metadata = (tokenDevice as any).callMetadata as Metadata;
+
+      expect(metadata).toBeInstanceOf(Metadata);
+      expect(metadata.get("x-scifi-auth-token")).toEqual(["f3a9c1"]);
+    });
+
+    it("attaches nothing when no token is given", () => {
+      const metadata = (device as any).callMetadata as Metadata;
+
+      expect(metadata.get("x-scifi-auth-token")).toEqual([]);
+    });
+  });
+
   describe("configure", () => {
     it("should configure device with config", async () => {
       const config = new Config();
@@ -30,7 +48,7 @@ describe("Device", () => {
       config.addNode(node);
 
       // Mock RPC response
-      device.rpc.configure = jest.fn((proto, options, callback) => {
+      device.rpc.configure = jest.fn((proto, metadata, options, callback) => {
         callback(null, { code: synapse.StatusCode.kOk });
       });
 
@@ -42,7 +60,7 @@ describe("Device", () => {
 
     it("should reject on configure error", async () => {
       const config = new Config();
-      device.rpc.configure = jest.fn((proto, options, callback) => {
+      device.rpc.configure = jest.fn((proto, metadata, options, callback) => {
         callback(new Error("Configure failed"));
       });
 
@@ -58,7 +76,7 @@ describe("Device", () => {
         name: "test-device",
       };
 
-      device.rpc.info = jest.fn((req, options, callback) => {
+      device.rpc.info = jest.fn((req, metadata, options, callback) => {
         callback(null, mockInfo);
       });
 
@@ -68,7 +86,7 @@ describe("Device", () => {
     });
 
     it("should reject on info error", async () => {
-      device.rpc.info = jest.fn((req, options, callback) => {
+      device.rpc.info = jest.fn((req, metadata, options, callback) => {
         callback(new Error("Info failed"));
       });
 
@@ -78,7 +96,7 @@ describe("Device", () => {
 
   describe("start/stop", () => {
     it("should start device", async () => {
-      device.rpc.start = jest.fn((req, options, callback) => {
+      device.rpc.start = jest.fn((req, metadata, options, callback) => {
         callback(null, { code: synapse.StatusCode.kOk });
       });
 
@@ -87,7 +105,7 @@ describe("Device", () => {
     });
 
     it("should stop device", async () => {
-      device.rpc.stop = jest.fn((req, options, callback) => {
+      device.rpc.stop = jest.fn((req, metadata, options, callback) => {
         callback(null, { code: synapse.StatusCode.kOk });
       });
 
@@ -133,7 +151,7 @@ describe("Device", () => {
         ],
       };
 
-      device.rpc.getLogs = jest.fn((req, options, callback) => {
+      device.rpc.getLogs = jest.fn((req, metadata, options, callback) => {
         callback(null, mockResponse);
       });
 
@@ -147,7 +165,7 @@ describe("Device", () => {
     });
 
     it("should handle getLogs error", async () => {
-      device.rpc.getLogs = jest.fn((req, options, callback) => {
+      device.rpc.getLogs = jest.fn((req, metadata, options, callback) => {
         callback(new Error("GetLogs failed"));
       });
 
