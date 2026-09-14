@@ -56,6 +56,17 @@ describe("Device", () => {
       expect(status.ok()).toBe(true);
       expect(device.rpc.configure).toHaveBeenCalled();
       expect(node.device).toBe(device);
+
+      // The Metadata instance built inside the constructor must actually
+      // reach the rpc call, in its correct positional slot — not just exist
+      // on the Device instance. `rpc` is typed `any`, so nothing else here
+      // would catch a call site that dropped this argument.
+      expect(device.rpc.configure).toHaveBeenCalledWith(
+        expect.anything(), // request
+        device["callMetadata"], // metadata — the slot that must not be dropped
+        expect.anything(), // options
+        expect.any(Function) // callback
+      );
     });
 
     it("should reject on configure error", async () => {
@@ -223,6 +234,13 @@ describe("Device", () => {
       expect(mockStream.on).toHaveBeenCalledWith("end", onEnd);
       expect(mockStream.on).toHaveBeenCalledWith("error", onError);
       expect(mockStream.on).toHaveBeenCalledWith("status", expect.any(Function));
+
+      // tailLogs is server-streaming: grpc-js's positional layout is
+      // (argument, metadata, options) with no callback slot, unlike the
+      // unary case above. Assert the same Metadata instance lands there too,
+      // since a regression in this slot wouldn't be caught by the unary
+      // assertion alone.
+      expect(device.rpc.tailLogs).toHaveBeenCalledWith(query, device["callMetadata"], {});
     });
 
     it("should handle tailLogs with minimal callbacks", async () => {
