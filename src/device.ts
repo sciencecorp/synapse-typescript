@@ -33,7 +33,7 @@ const kSynapseService = "synapse.SynapseDevice";
 export interface DeviceOptions {
   /**
    * Pairing token for devices that require one. Attached to every call as
-   * x-scifi-auth-token metadata.
+   * an `authorization: Bearer <token>` header (RFC 6750).
    *
    * Built here rather than by callers on purpose: grpc-js decides whether an
    * argument is metadata with `instanceof Metadata`, which is class identity. A
@@ -51,7 +51,7 @@ class Device {
   constructor(public uri: string, opts: DeviceOptions = {}) {
     this.callMetadata = new Metadata();
     if (opts.token) {
-      this.callMetadata.set("x-scifi-auth-token", opts.token);
+      this.callMetadata.set("authorization", `Bearer ${opts.token}`);
     }
 
     const { status, client } = create(protos, kSynapseService)(uri, credentials.createInsecure());

@@ -31,13 +31,13 @@ describe("Device", () => {
       const metadata = (tokenDevice as any).callMetadata as Metadata;
 
       expect(metadata).toBeInstanceOf(Metadata);
-      expect(metadata.get("x-scifi-auth-token")).toEqual(["f3a9c1"]);
+      expect(metadata.get("authorization")).toEqual(["Bearer f3a9c1"]);
     });
 
     it("attaches nothing when no token is given", () => {
       const metadata = (device as any).callMetadata as Metadata;
 
-      expect(metadata.get("x-scifi-auth-token")).toEqual([]);
+      expect(metadata.get("authorization")).toEqual([]);
     });
   });
 
