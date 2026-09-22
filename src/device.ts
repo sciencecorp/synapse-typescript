@@ -224,6 +224,126 @@ class Device {
     return call;
   }
 
+  // Files
+  //
+  // These replace SFTP as the transport for device files. Access is governed
+  // by the pairing token that governs every other RPC, so there is no second
+  // credential. Paths are relative to the device's data root and cannot
+  // escape it.
+
+  async listFiles(
+    path = "",
+    recursive = false,
+    options: CallOptions = {}
+  ): Promise<{ status: Status; response?: synapse.ListFilesResponse }> {
+    return new Promise((resolve, reject) => {
+      this.rpc.listFiles(
+        { path, recursive },
+        this.callMetadata,
+        options,
+        (err: ServiceError, res: synapse.ListFilesResponse) => {
+          if (err) {
+            reject(err);
+            return;
+          }
+          resolve({ status: new Status(), response: res });
+        }
+      );
+    });
+  }
+
+  /**
+   * Stream a file off the device.
+   *
+   * Server-streaming rather than one response: recordings run to gigabytes,
+   * well past gRPC's 4 MB default message limit. `startOffset` resumes a
+   * partial download instead of starting over.
+   */
+  readFile(
+    path: string,
+    callbacks: {
+      onData: (chunk: synapse.ReadFileResponse) => void;
+      onEnd?: () => void;
+      onError?: (err: Error) => void;
+      onStatus?: (status: Status) => void;
+    },
+    startOffset = 0,
+    options: CallOptions = {}
+  ) {
+    const { onData, onEnd, onError, onStatus } = callbacks;
+    const call = this.rpc.readFile(
+      { path, startOffset },
+      this.callMetadata,
+      options
+    );
+    call.on("data", onData);
+    if (onEnd) {
+      call.on("end", onEnd);
+    }
+    if (onError) {
+      call.on("error", onError);
+    }
+    if (onStatus) {
+      call.on("status", (grpcStatus) => {
+        onStatus?.(new Status(grpcStatus.code, grpcStatus.details));
+      });
+    }
+    return call;
+  }
+
+  /**
+   * Stream a file onto the device.
+   *
+   * Client-streaming, and the FIRST message must carry the path with no data:
+   * the server resolves and opens the target from it before any bytes arrive.
+   * Returns the writable call so the caller can pace chunks against
+   * backpressure rather than buffering a whole recording in memory.
+   */
+  writeFile(
+    path: string,
+    callbacks: {
+      onDone: (response: synapse.WriteFileResponse) => void;
+      onError?: (err: Error) => void;
+    },
+    options: CallOptions = {}
+  ) {
+    const { onDone, onError } = callbacks;
+    const call = this.rpc.writeFile(
+      this.callMetadata,
+      options,
+      (err: ServiceError, res: synapse.WriteFileResponse) => {
+        if (err) {
+          onError?.(err);
+          return;
+        }
+        onDone(res);
+      }
+    );
+    call.write({ path });
+    return call;
+  }
+
+  async deleteFile(
+    path: string,
+    recursive = false,
+    options: CallOptions = {}
+  ): Promise<{ status: Status; response?: synapse.DeleteFileResponse }> {
+    return new Promise((resolve, reject) => {
+      this.rpc.deleteFile(
+        { path, recursive },
+        this.callMetadata,
+        options,
+        (err: ServiceError, res: synapse.DeleteFileResponse) => {
+          if (err) {
+            reject(err);
+            return;
+          }
+          resolve({ status: new Status(), response: res });
+        }
+      );
+    });
+  }
+
   // Apps
 
   async listApps(options: CallOptions = {}): Promise<{ status: Status; response?: synapse.ListAppsResponse }> {
