@@ -164,6 +164,61 @@ describe("Config", () => {
       const config = Config.fromProto(protoConfig);
       expect(config.nodes).toHaveLength(0);
     });
+
+    // Regression: kApplication had no entry in kNodeTypeObjectMap, so fromProto
+    // skipped application nodes and, with them, every connection to one. A
+    // device configured from the result silently ran a truncated signal chain.
+    it("should round-trip an application node and its connections", () => {
+      const protoConfig = new synapse.DeviceConfiguration({
+        nodes: [
+          { id: 1, type: synapse.NodeType.kBroadbandSource, broadbandSource: {} },
+          {
+            id: 2,
+            type: synapse.NodeType.kApplication,
+            application: { name: "my-app", parameters: { threshold: { numberValue: 42 } } },
+          },
+        ],
+        connections: [{ srcNodeId: 1, dstNodeId: 2 }],
+      });
+
+      const config = Config.fromProto(protoConfig);
+      expect(config.nodes).toHaveLength(2);
+      expect(config.connections).toEqual([[1, 2]]);
+
+      const converted = config.toProto();
+      expect(converted.nodes).toHaveLength(2);
+      expect(converted.connections).toHaveLength(1);
+
+      const app = converted.nodes.find((n) => n.type === synapse.NodeType.kApplication);
+      expect(app?.id).toBe(2);
+      expect(app?.application?.name).toBe("my-app");
+      expect(app?.application?.parameters?.threshold?.numberValue).toBe(42);
+    });
+
+    it("should round-trip a camera node", () => {
+      const protoConfig = new synapse.DeviceConfiguration({
+        nodes: [{ id: 1, type: synapse.NodeType.kCamera, camera: { peripheralId: 3 } }],
+      });
+
+      const config = Config.fromProto(protoConfig);
+      expect(config.nodes).toHaveLength(1);
+      expect(config.toProto().nodes[0].camera?.peripheralId).toBe(3);
+    });
+
+    it("should warn rather than silently drop an unregistered node type", () => {
+      const warn = jest.spyOn(console, "warn").mockImplementation(() => undefined);
+      // A node type the registry doesn't cover. kNodeTypeUnknown stays quiet
+      // (it carries no config); anything else means kNodeTypeObjectMap is out
+      // of date with the API and must not fail silently.
+      const protoConfig = new synapse.DeviceConfiguration({
+        nodes: [{ id: 1, type: 999 as synapse.NodeType }],
+      });
+
+      const config = Config.fromProto(protoConfig);
+      expect(config.nodes).toHaveLength(0);
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining("no node class registered"));
+      warn.mockRestore();
+    });
   });
 
   describe("setDevice", () => {

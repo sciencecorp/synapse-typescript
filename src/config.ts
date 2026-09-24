@@ -1,6 +1,8 @@
 import Node from "./node";
 import { synapse } from "./api/api";
+import Application from "./nodes/application";
 import BroadbandSource from "./nodes/broadband_source";
+import Camera from "./nodes/camera";
 import DiskWriter from "./nodes/disk_writer";
 import ElectricalStimulation from "./nodes/electrical_stimulation";
 import OpticalStimulation from "./nodes/optical_stimulation";
@@ -12,7 +14,9 @@ import { Status, StatusCode } from "./utils/status";
 
 type Connection = [number, number];
 const kNodeTypeObjectMap = {
+  [synapse.NodeType.kApplication]: Application,
   [synapse.NodeType.kBroadbandSource]: BroadbandSource,
+  [synapse.NodeType.kCamera]: Camera,
   [synapse.NodeType.kDiskWriter]: DiskWriter,
   [synapse.NodeType.kElectricalStimulation]: ElectricalStimulation,
   [synapse.NodeType.kSpikeSource]: SpikeSource,
@@ -81,6 +85,18 @@ class Config {
       const { type } = nodeProto;
       const NodeType = kNodeTypeObjectMap[type];
       if (!NodeType) {
+        // Dropping a node here also drops every connection to it below, which
+        // silently truncates the signal chain instead of failing -- a device
+        // configured from the result reports success for a chain that is
+        // missing nodes the caller asked for. kNodeTypeUnknown carries no
+        // config and is legitimately skipped; any other type reaching here is a
+        // gap in kNodeTypeObjectMap and should be visible.
+        if (type !== synapse.NodeType.kNodeTypeUnknown) {
+          console.warn(
+            "Config.fromProto: no node class registered for node type " +
+              `${synapse.NodeType[type] ?? type}; dropping the node and its connections`
+          );
+        }
         continue;
       }
 

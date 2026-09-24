@@ -1,4 +1,6 @@
+export { default as Application } from "./application";
 export { default as BroadbandSource } from "./broadband_source";
+export { default as Camera } from "./camera";
 export { default as DiskWriter } from "./disk_writer";
 export { default as ElectricalStimulation } from "./electrical_stimulation";
 export { default as OpticalStimulation } from "./optical_stimulation";
