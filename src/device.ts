@@ -362,40 +362,10 @@ class Device {
 
   // Pairing
 
-  async listAuthClients(
-    options: CallOptions = {}
-  ): Promise<{ status: Status; response?: synapse.ListAuthClientsResponse }> {
+  /** Revokes this client's own token on the device. */
+  async revokeAuth(options: CallOptions = {}): Promise<{ status: Status }> {
     return new Promise((resolve, reject) => {
-      this.rpc.listAuthClients(
-        {},
-        this.callMetadata,
-        options,
-        (err: ServiceError, res: synapse.ListAuthClientsResponse) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve({ status: new Status(), response: res });
-          }
-        }
-      );
-    });
-  }
-
-  async revokeAuthClient(id: string, options: CallOptions = {}): Promise<{ status: Status }> {
-    return new Promise((resolve, reject) => {
-      this.rpc.revokeAuthClient({ id }, this.callMetadata, options, (err: ServiceError) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve({ status: new Status() });
-        }
-      });
-    });
-  }
-
-  async setAuthClientLifetime(id: string, lifetimeDays: number, options: CallOptions = {}): Promise<{ status: Status }> {
-    return new Promise((resolve, reject) => {
-      this.rpc.setAuthClientLifetime({ id, lifetimeDays }, this.callMetadata, options, (err: ServiceError) => {
+      this.rpc.revokeAuth({}, this.callMetadata, options, (err: ServiceError) => {
         if (err) {
           reject(err);
         } else {
