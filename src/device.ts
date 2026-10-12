@@ -1,4 +1,4 @@
-import { Channel, credentials, ServiceError } from "@grpc/grpc-js";
+import { Channel, credentials, Metadata, ServiceError } from "@grpc/grpc-js";
 import * as fs from "fs";
 import * as crypto from "crypto";
 import * as path from "path";
@@ -30,11 +30,30 @@ function extractVersion(packageName: string): string {
 
 const kSynapseService = "synapse.SynapseDevice";
 
+export interface DeviceOptions {
+  /**
+   * Pairing token for devices that require one. Attached to every call as
+   * an `authorization: Bearer <token>` header (RFC 6750).
+   *
+   * Built here rather than by callers on purpose: grpc-js decides whether an
+   * argument is metadata with `instanceof Metadata`, which is class identity. A
+   * Metadata built against a different copy of @grpc/grpc-js would be silently
+   * reinterpreted as call options and the token would be dropped with no error.
+   */
+  token?: string;
+}
+
 class Device {
   rpc: any | null = null;
   channel: Channel | null = null;
+  private callMetadata: Metadata;
 
-  constructor(public uri: string) {
+  constructor(public uri: string, opts: DeviceOptions = {}) {
+    this.callMetadata = new Metadata();
+    if (opts.token) {
+      this.callMetadata.set("authorization", `Bearer ${opts.token}`);
+    }
+
     const { status, client } = create(protos, kSynapseService)(uri, credentials.createInsecure());
     if (!status.ok() || !client) {
       throw new Error(`Failed to create client for ${uri}: ${status.message}`);
@@ -46,7 +65,7 @@ class Device {
     return new Promise((resolve, reject) => {
       config.setDevice(this);
       const proto = config.toProto();
-      this.rpc.configure(proto, options, (err: ServiceError, res) => {
+      this.rpc.configure(proto, this.callMetadata, options, (err: ServiceError, res) => {
         if (err) {
           reject(err);
         } else {
@@ -63,7 +82,7 @@ class Device {
 
   async info(options: CallOptions = {}): Promise<{ status: Status; response?: synapse.DeviceInfo }> {
     return new Promise((resolve, reject) => {
-      this.rpc.info({}, options, (err: ServiceError, res: synapse.DeviceInfo) => {
+      this.rpc.info({}, this.callMetadata, options, (err: ServiceError, res: synapse.DeviceInfo) => {
         if (err) {
           reject(err);
         } else if (!res) {
@@ -77,7 +96,7 @@ class Device {
 
   async start(options: CallOptions = {}): Promise<Status> {
     return new Promise((resolve, reject) => {
-      this.rpc.start({}, options, (err: ServiceError, res: synapse.IStatus) => {
+      this.rpc.start({}, this.callMetadata, options, (err: ServiceError, res: synapse.IStatus) => {
         if (err) {
           reject(err);
         } else {
@@ -94,7 +113,7 @@ class Device {
 
   async stop(options: CallOptions = {}): Promise<Status> {
     return new Promise((resolve, reject) => {
-      this.rpc.stop({}, options, (err: ServiceError, res: synapse.IStatus) => {
+      this.rpc.stop({}, this.callMetadata, options, (err: ServiceError, res: synapse.IStatus) => {
         if (err) {
           reject(err);
         } else {
@@ -120,7 +139,7 @@ class Device {
     }
   ) {
     const { onData, onEnd, onError, onStatus } = callbacks;
-    const call = this.rpc.streamQuery(query, options);
+    const call = this.rpc.streamQuery(query, this.callMetadata, options);
     call.on("data", (data: synapse.StreamQueryResponse) => {
       onData(data);
     });
@@ -149,7 +168,7 @@ class Device {
     options: CallOptions = {}
   ): Promise<{ status: Status; response?: synapse.QueryResponse }> {
     return new Promise((resolve, reject) => {
-      this.rpc.query(request, options, (err: ServiceError, res: synapse.QueryResponse) => {
+      this.rpc.query(request, this.callMetadata, options, (err: ServiceError, res: synapse.QueryResponse) => {
         if (err) {
           reject(err);
         } else if (!res) {
@@ -168,7 +187,7 @@ class Device {
     options: CallOptions = {}
   ): Promise<{ status: Status; response?: synapse.LogQueryResponse }> {
     return new Promise((resolve, reject) => {
-      this.rpc.getLogs(query, options, (err: ServiceError, res: synapse.LogQueryResponse) => {
+      this.rpc.getLogs(query, this.callMetadata, options, (err: ServiceError, res: synapse.LogQueryResponse) => {
         if (err) {
           reject(err);
         } else {
@@ -189,7 +208,7 @@ class Device {
     }
   ) {
     const { onData, onEnd, onError, onStatus } = callbacks;
-    const call = this.rpc.tailLogs(query, options);
+    const call = this.rpc.tailLogs(query, this.callMetadata, options);
     call.on("data", onData);
     if (onEnd) {
       call.on("end", onEnd);
@@ -205,17 +224,152 @@ class Device {
     return call;
   }
 
+  // Files
+  //
+  // These replace SFTP as the transport for device files. Access is governed
+  // by the pairing token that governs every other RPC, so there is no second
+  // credential. Paths are relative to the device's data root and cannot
+  // escape it.
+
+  async listFiles(
+    path = "",
+    recursive = false,
+    options: CallOptions = {}
+  ): Promise<{ status: Status; response?: synapse.ListFilesResponse }> {
+    return new Promise((resolve, reject) => {
+      this.rpc.listFiles(
+        { path, recursive },
+        this.callMetadata,
+        options,
+        (err: ServiceError, res: synapse.ListFilesResponse) => {
+          if (err) {
+            reject(err);
+            return;
+          }
+          resolve({ status: new Status(), response: res });
+        }
+      );
+    });
+  }
+
+  /**
+   * Stream a file off the device.
+   *
+   * Server-streaming rather than one response: recordings run to gigabytes,
+   * well past gRPC's 4 MB default message limit. `startOffsetBytes` resumes a
+   * partial download instead of starting over.
+   */
+  readFile(
+    path: string,
+    callbacks: {
+      onData: (chunk: synapse.ReadFileResponse) => void;
+      onEnd?: () => void;
+      onError?: (err: Error) => void;
+      onStatus?: (status: Status) => void;
+    },
+    startOffsetBytes = 0,
+    options: CallOptions = {}
+  ) {
+    const { onData, onEnd, onError, onStatus } = callbacks;
+    const call = this.rpc.readFile(
+      { path, startOffsetBytes },
+      this.callMetadata,
+      options
+    );
+    call.on("data", onData);
+    if (onEnd) {
+      call.on("end", onEnd);
+    }
+    if (onError) {
+      call.on("error", onError);
+    }
+    if (onStatus) {
+      call.on("status", (grpcStatus) => {
+        onStatus?.(new Status(grpcStatus.code, grpcStatus.details));
+      });
+    }
+    return call;
+  }
+
+  /**
+   * Stream a file onto the device.
+   *
+   * Client-streaming, and the FIRST message must carry the path with no data:
+   * the server resolves and opens the target from it before any bytes arrive.
+   * Returns the writable call so the caller can pace chunks against
+   * backpressure rather than buffering a whole recording in memory.
+   */
+  writeFile(
+    path: string,
+    callbacks: {
+      onDone: (response: synapse.WriteFileResponse) => void;
+      onError?: (err: Error) => void;
+    },
+    options: CallOptions = {}
+  ) {
+    const { onDone, onError } = callbacks;
+    const call = this.rpc.writeFile(
+      this.callMetadata,
+      options,
+      (err: ServiceError, res: synapse.WriteFileResponse) => {
+        if (err) {
+          onError?.(err);
+          return;
+        }
+        onDone(res);
+      }
+    );
+    call.write({ path });
+    return call;
+  }
+
+  async deleteFile(
+    path: string,
+    recursive = false,
+    options: CallOptions = {}
+  ): Promise<{ status: Status; response?: synapse.DeleteFileResponse }> {
+    return new Promise((resolve, reject) => {
+      this.rpc.deleteFile(
+        { path, recursive },
+        this.callMetadata,
+        options,
+        (err: ServiceError, res: synapse.DeleteFileResponse) => {
+          if (err) {
+            reject(err);
+            return;
+          }
+          resolve({ status: new Status(), response: res });
+        }
+      );
+    });
+  }
+
   // Apps
 
   async listApps(options: CallOptions = {}): Promise<{ status: Status; response?: synapse.ListAppsResponse }> {
     return new Promise((resolve, reject) => {
-      this.rpc.listApps({}, options, (err: ServiceError, res: synapse.ListAppsResponse) => {
+      this.rpc.listApps({}, this.callMetadata, options, (err: ServiceError, res: synapse.ListAppsResponse) => {
         if (err) {
           reject(err);
         } else if (!res) {
           reject(new Error("No response from listApps"));
         } else {
           resolve({ status: new Status(), response: res });
+        }
+      });
+    });
+  }
+
+  // Pairing
+
+  /** Revokes this client's own token on the device. */
+  async revokeAuth(options: CallOptions = {}): Promise<{ status: Status }> {
+    return new Promise((resolve, reject) => {
+      this.rpc.revokeAuth({}, this.callMetadata, options, (err: ServiceError) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve({ status: new Status() });
         }
       });
     });
@@ -231,6 +385,7 @@ class Device {
       const request: synapse.IUpdateDeviceSettingsRequest = { settings };
       this.rpc.updateDeviceSettings(
         request,
+        this.callMetadata,
         options,
         (err: ServiceError, res: synapse.UpdateDeviceSettingsResponse) => {
           if (err) {
@@ -256,7 +411,11 @@ class Device {
     }
   ) {
     const { onData, onEnd, onError, onStatus } = callbacks;
-    const call = this.rpc.deployApp({}, options);
+    // DeployApp is bidi-streaming (no unary request argument): grpc-js's
+    // makeBidiStreamRequest signature is (metadata, options), not
+    // (argument, metadata, options). The old `({}, options)` call silently
+    // misdirected `{}` into the metadata slot and dropped `options` entirely.
+    const call = this.rpc.deployApp(this.callMetadata, options);
 
     call.on("data", (data: synapse.AppDeployResponse) => {
       onData(data);
