@@ -256,7 +256,7 @@ class Device {
    * Stream a file off the device.
    *
    * Server-streaming rather than one response: recordings run to gigabytes,
-   * well past gRPC's 4 MB default message limit. `startOffset` resumes a
+   * well past gRPC's 4 MB default message limit. `startOffsetBytes` resumes a
    * partial download instead of starting over.
    */
   readFile(
@@ -267,12 +267,12 @@ class Device {
       onError?: (err: Error) => void;
       onStatus?: (status: Status) => void;
     },
-    startOffset = 0,
+    startOffsetBytes = 0,
     options: CallOptions = {}
   ) {
     const { onData, onEnd, onError, onStatus } = callbacks;
     const call = this.rpc.readFile(
-      { path, startOffset },
+      { path, startOffsetBytes },
       this.callMetadata,
       options
     );
